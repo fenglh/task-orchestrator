@@ -1,6 +1,6 @@
 import type { TaskTreeNodeView, TaskTreeView } from "../types/task-status-view.ts";
 
-function statusLabel(status?: string): string {
+function threadStatusLabel(status?: string): string {
   switch (status) {
     case "pending":
       return "待处理";
@@ -14,6 +14,21 @@ function statusLabel(status?: string): string {
       return "已暂停";
     case "finished":
       return "已完成";
+    case "failed":
+      return "失败";
+    case "cancelled":
+      return "已取消";
+    default:
+      return status ?? "未知";
+  }
+}
+
+function nodeStatusLabel(status?: string): string {
+  switch (status) {
+    case "pending":
+      return "待处理";
+    case "running":
+      return "进行中";
     case "done":
       return "已完成";
     case "failed":
@@ -23,7 +38,7 @@ function statusLabel(status?: string): string {
     case "waiting_children":
       return "等待子任务";
     case "cancelled":
-      return "已取消";
+      return "已跳过";
     default:
       return status ?? "未知";
   }
@@ -48,13 +63,13 @@ function renderNode(node: TaskTreeNodeView, indent: string): string[] {
   const evidenceText = evidenceStatusLabel(node.completionEvidenceStatus);
   const evidenceSuffix = evidenceText ? ` {${evidenceText}}` : "";
   const marker = node.isCurrentNode ? "👉 " : node.isSuggestedNode ? "⭐ " : node.isInCurrentPath ? "↳ " : "";
-  const lines = [`${indent}- ${marker}${node.displayPath}. ${node.title} [${statusLabel(node.status)}]${evidenceSuffix}`];
+  const lines = [`${indent}- ${marker}${node.displayPath}. ${node.title} [${nodeStatusLabel(node.status)}]${evidenceSuffix}`];
   for (const child of node.children) lines.push(...renderNode(child, `${indent}  `));
   return lines;
 }
 
 export function renderTaskTree(view: TaskTreeView): string {
-  const lines = [`任务：${view.title}`, `状态：${statusLabel(view.status)}`];
+  const lines = [`任务：${view.title}`, `状态：${threadStatusLabel(view.status)}`];
 
   if (view.status === "awaiting_plan_confirmation") {
     lines.push("说明：计划已生成，尚未执行，正在等待你确认开始。");
