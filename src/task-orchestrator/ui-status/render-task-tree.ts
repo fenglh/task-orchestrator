@@ -4,7 +4,10 @@ import type {
 } from "../types/task-status-view.ts";
 
 function renderNode(node: TaskTreeNodeView, indent: string): string[] {
-  const lines = [`${indent}- ${node.displayPath}. ${node.title} [${node.status}]`];
+  const evidenceSuffix = node.completionEvidenceStatus
+    ? ` {evidence=${node.completionEvidenceStatus}}`
+    : "";
+  const lines = [`${indent}- ${node.displayPath}. ${node.title} [${node.status}]${evidenceSuffix}`];
   for (const child of node.children) {
     lines.push(...renderNode(child, `${indent}  `));
   }

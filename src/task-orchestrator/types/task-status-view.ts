@@ -17,6 +17,11 @@ export interface TaskSummaryView {
   threadId: string;
   title: string;
   status: TaskThreadStatus;
+  reviewStats?: {
+    needsReview: number;
+    partial: number;
+    failedChecks: number;
+  };
   currentNode?: {
     id: string;
     displayPath: string;
@@ -37,6 +42,7 @@ export interface TaskTreeNodeView {
   displayPath: string;
   title: string;
   status: TaskNodeStatus;
+  completionEvidenceStatus?: string;
   children: TaskTreeNodeView[];
 }
 

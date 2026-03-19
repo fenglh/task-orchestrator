@@ -41,6 +41,7 @@ export function projectSummaryView(thread: TaskThread): TaskSummaryView {
         }
       : undefined,
     progress: countTaskProgress(thread),
+    reviewStats: collectReviewStats(thread),
     blocked: thread.blocked
       ? {
           question: thread.blocked.question,
@@ -93,8 +94,6 @@ export function projectNodeView(
       status: node.status,
       report: node.report,
       userVisibleSummary: node.userVisibleSummary,
-      completionContract: node.completionContract,
-      completionEvidence: node.completionEvidence,
       evidence: node.evidence,
       children: listChildNodes(thread, node.id).map((child) => ({
         id: child.id,

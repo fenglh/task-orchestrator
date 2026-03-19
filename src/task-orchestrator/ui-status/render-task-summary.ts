@@ -13,6 +13,12 @@ export function renderTaskSummary(view: TaskSummaryView): string {
     );
   }
 
+  if (view.reviewStats) {
+    lines.push(
+      `Review flags: needs_review=${view.reviewStats.needsReview}, partial=${view.reviewStats.partial}, failed_checks=${view.reviewStats.failedChecks}`,
+    );
+  }
+
   if (view.blocked) {
     lines.push(`Blocked: ${view.blocked.question}`);
   }
