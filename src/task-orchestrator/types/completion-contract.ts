@@ -187,11 +187,18 @@ export interface AcceptanceCheckResult {
  * 节点完成证据：节点执行后由系统记录
  * “实际产出了什么、检查结果如何、最终应如何理解”。
  */
+export interface RuntimeEvidenceDetails {
+  toolCalls?: string[];
+  modifiedArtifacts?: string[];
+  commandLabels?: string[];
+}
+
 export interface NodeCompletionEvidence {
   status: CompletionEvidenceStatus;
   outputs: CompletionOutputEvidence[];
   checkResults: AcceptanceCheckResult[];
   verifierSummary: string;
   reviewMode?: ReviewMode;
+  runtimeEvidence?: RuntimeEvidenceDetails;
   generatedAt: string;
 }

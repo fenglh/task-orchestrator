@@ -39,6 +39,18 @@ export function renderNodeDetail(view: TaskNodeDetailView): string {
     if (view.node.completionEvidence.checkResults.length > 0) {
       lines.push(`- Check results: ${view.node.completionEvidence.checkResults.length}`);
     }
+    if (view.node.completionEvidence.runtimeEvidence) {
+      lines.push("Runtime evidence:");
+      if ((view.node.completionEvidence.runtimeEvidence.toolCalls?.length ?? 0) > 0) {
+        lines.push(`- Tool calls observed: ${view.node.completionEvidence.runtimeEvidence.toolCalls?.join(", ")}`);
+      }
+      if ((view.node.completionEvidence.runtimeEvidence.modifiedArtifacts?.length ?? 0) > 0) {
+        lines.push(`- Modified artifacts observed: ${view.node.completionEvidence.runtimeEvidence.modifiedArtifacts?.join(", ")}`);
+      }
+      if ((view.node.completionEvidence.runtimeEvidence.commandLabels?.length ?? 0) > 0) {
+        lines.push(`- Commands observed: ${view.node.completionEvidence.runtimeEvidence.commandLabels?.join(" | ")}`);
+      }
+    }
   }
 
   if (view.node.report) {

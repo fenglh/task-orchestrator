@@ -258,6 +258,7 @@ export async function verifyNodeCompletion(
           ? "自动检查已通过，但该节点仍建议人工复核；当前 verifier 只覆盖可观察证据层"
           : `共 ${passedCount} 项检查通过；当前 verifier 仅验证可观察证据与基本交付形式`,
     reviewMode: contract.reviewMode,
+    runtimeEvidence: input.runtimeEvidence,
     generatedAt: input.now,
   };
 }
