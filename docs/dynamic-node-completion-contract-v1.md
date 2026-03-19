@@ -53,7 +53,7 @@ v1 重点是：**可验证交付 + 结构化证据 + 可追踪失败原因**。
 4. 哪些检查是自动化的？
 5. 哪些部分需要人工 review？
 
-### 2. Completion Evidence
+### 2. 完成证据（Completion Evidence）
 
 每个节点执行后，系统记录“完成证据（completion evidence）”。
 
@@ -405,3 +405,4 @@ v1 建议支持：
 ## 最终定义（一句话）
 
 > 动态节点完成机制 = 节点在生成时动态声明完成契约（completion contract），系统在执行后基于通用检查原语与实际执行痕迹生成完成证据（completion evidence），再据此判定节点是否可被视为完成、部分完成、阻塞或需人工复核。
+
