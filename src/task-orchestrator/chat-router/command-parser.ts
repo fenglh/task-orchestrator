@@ -11,6 +11,7 @@ export type TaskCommand =
   | { name: "skip"; nodeRef?: string }
   | { name: "pause" }
   | { name: "resume"; payload?: string }
+  | { name: "finish" }
   | { name: "cancel" }
   | { name: "list" };
 
@@ -77,6 +78,8 @@ export function parseTaskCommand(message: string): TaskCommand | undefined {
         name: "resume",
         payload: parts.slice(2).join(" "),
       };
+    case "finish":
+      return { name: "finish" };
     case "cancel":
       return { name: "cancel" };
     case "list":

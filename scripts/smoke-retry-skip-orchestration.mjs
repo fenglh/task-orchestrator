@@ -112,13 +112,13 @@ console.log('');
 
 adapter.markTaskBSkipped();
 thread = await orchestrator.skipTaskNode(thread.threadId, '2');
-summaryView = await orchestrator.getTaskStatus(thread.threadId, 'summary');
+const waitingSummaryView = await orchestrator.getTaskStatus(thread.threadId, 'summary');
 const treeView = await orchestrator.getTaskStatus(thread.threadId, 'tree');
 const node1View = await orchestrator.getTaskStatus(thread.threadId, 'node', '1');
 const node2View = await orchestrator.getTaskStatus(thread.threadId, 'node', '2');
 
 console.log('--- FINAL SUMMARY ---');
-console.log(renderTaskSummary(summaryView));
+console.log(renderTaskSummary(waitingSummaryView));
 console.log('');
 console.log('--- TREE ---');
 console.log(renderTaskTree(treeView));
@@ -128,6 +128,12 @@ console.log(renderNodeDetail(node1View));
 console.log('');
 console.log('--- NODE 2 DETAIL ---');
 console.log(renderNodeDetail(node2View));
+console.log('');
+
+thread = await orchestrator.confirmTaskFinish(thread.threadId);
+const finishedSummaryView = await orchestrator.getTaskStatus(thread.threadId, 'summary');
+console.log('--- FINISHED SUMMARY ---');
+console.log(renderTaskSummary(finishedSummaryView));
 console.log('');
 console.log('--- CALLS ---');
 console.log(adapter.getCalls().join('\n'));
@@ -140,8 +146,9 @@ const assertions = [
   ['first run failed', calls.includes('execute:1:任务A：失败后 retry:')],
   ['retry reran task A', calls.filter((line) => line.startsWith('execute:1:任务A：失败后 retry')).length === 2],
   ['task B executed and failed once', calls.includes('execute:2:任务B：失败后 skip:')],
-  ['thread finished after skip', summaryView.status === 'finished'],
-  ['finalize called', calls[calls.length - 1] === 'finalize'],
+  ['thread waits for finish confirmation after skip', waitingSummaryView.status === 'awaiting_finish_confirmation'],
+  ['finalize called after confirm finish', calls[calls.length - 1] === 'finalize'],
+  ['finished summary status', finishedSummaryView.status === 'finished'],
   ['tree shows task A done', treeText.includes('1. 任务A：失败后 retry [已完成]')],
   ['tree shows task B cancelled', treeText.includes('2. 任务B：失败后 skip [已跳过]')],
   ['node1 summary mentions retry success', (node1View.node.userVisibleSummary ?? '').includes('retry 后成功')],

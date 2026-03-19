@@ -82,18 +82,24 @@ console.log(renderTaskSummary(summary2));
 console.log('');
 
 thread = await orchestrator.retryTaskNode(thread.threadId, '第二次 retry');
-const finalSummary = await orchestrator.getTaskStatus(thread.threadId, 'summary');
+const waitingSummary = await orchestrator.getTaskStatus(thread.threadId, 'summary');
 const treeView = await orchestrator.getTaskStatus(thread.threadId, 'tree');
 const node1View = await orchestrator.getTaskStatus(thread.threadId, 'node', '1');
 
 console.log('--- FINAL SUMMARY ---');
-console.log(renderTaskSummary(finalSummary));
+console.log(renderTaskSummary(waitingSummary));
 console.log('');
 console.log('--- TREE ---');
 console.log(renderTaskTree(treeView));
 console.log('');
 console.log('--- NODE 1 DETAIL ---');
 console.log(renderNodeDetail(node1View));
+console.log('');
+
+thread = await orchestrator.confirmTaskFinish(thread.threadId);
+const finalSummary = await orchestrator.getTaskStatus(thread.threadId, 'summary');
+console.log('--- FINISHED SUMMARY ---');
+console.log(renderTaskSummary(finalSummary));
 console.log('');
 console.log('--- CALLS ---');
 console.log(adapter.getCalls().join('\n'));
@@ -105,6 +111,7 @@ const treeText = renderTaskTree(treeView);
 const assertions = [
   ['first failure status', summary1.status === 'failed'],
   ['second failure status', summary2.status === 'failed'],
+  ['waiting finish confirmation before final close', waitingSummary.status === 'awaiting_finish_confirmation'],
   ['final status finished', finalSummary.status === 'finished'],
   ['node executed three times', calls.filter((line) => line.startsWith('execute:1:')).length === 3],
   ['finalize called', calls[calls.length - 1] === 'finalize'],

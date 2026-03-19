@@ -4,6 +4,7 @@ export type TaskIntent =
   | { kind: "tree" }
   | { kind: "pause" }
   | { kind: "resume" }
+  | { kind: "confirm_finish" }
   | { kind: "cancel" }
   | { kind: "retry"; nodeRef?: string; instruction?: string }
   | { kind: "skip"; nodeRef?: string }
@@ -68,6 +69,16 @@ export function detectTaskIntent(message: string): TaskIntent {
     normalized === "confirm"
   ) {
     return { kind: "confirm_start" };
+  }
+
+  if (
+    normalized === "确认结束" ||
+    normalized === "确认完成" ||
+    normalized === "确认结束任务" ||
+    normalized === "finish" ||
+    normalized === "确认已完成"
+  ) {
+    return { kind: "confirm_finish" };
   }
 
   if (

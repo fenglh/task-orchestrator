@@ -122,17 +122,17 @@ const channelContext = {
   userId: 'tester',
 };
 
-const thread = await orchestrator.startTask('运行动态编排 smoke test', channelContext);
-const summaryView = await orchestrator.getTaskStatus(thread.threadId, 'summary');
-const treeView = await orchestrator.getTaskStatus(thread.threadId, 'tree');
-const node1View = await orchestrator.getTaskStatus(thread.threadId, 'node', '1');
-const node2View = await orchestrator.getTaskStatus(thread.threadId, 'node', '2');
+const waitingThread = await orchestrator.startTask('运行动态编排 smoke test', channelContext);
+const waitingSummaryView = await orchestrator.getTaskStatus(waitingThread.threadId, 'summary');
+const waitingTreeView = await orchestrator.getTaskStatus(waitingThread.threadId, 'tree');
+const node1View = await orchestrator.getTaskStatus(waitingThread.threadId, 'node', '1');
+const node2View = await orchestrator.getTaskStatus(waitingThread.threadId, 'node', '2');
 
 console.log('--- SUMMARY ---');
-console.log(renderTaskSummary(summaryView));
+console.log(renderTaskSummary(waitingSummaryView));
 console.log('');
 console.log('--- TREE ---');
-console.log(renderTaskTree(treeView));
+console.log(renderTaskTree(waitingTreeView));
 console.log('');
 console.log('--- NODE 1 DETAIL ---');
 console.log(renderNodeDetail(node1View));
@@ -140,25 +140,34 @@ console.log('');
 console.log('--- NODE 2 DETAIL ---');
 console.log(renderNodeDetail(node2View));
 console.log('');
+
+const finishedThread = await orchestrator.confirmTaskFinish(waitingThread.threadId);
+const finishedSummaryView = await orchestrator.getTaskStatus(finishedThread.threadId, 'summary');
+console.log('--- FINISHED SUMMARY ---');
+console.log(renderTaskSummary(finishedSummaryView));
+console.log('');
+
 console.log('--- CALLS ---');
 console.log(adapter.getCalls().join('\n'));
 console.log('');
 
-const treeText = renderTaskTree(treeView);
-const summaryText = renderTaskSummary(summaryView);
+const treeText = renderTaskTree(waitingTreeView);
+const waitingSummaryText = renderTaskSummary(waitingSummaryView);
+const finishedSummaryText = renderTaskSummary(finishedSummaryView);
 const calls = adapter.getCalls();
 
 const assertions = [
-  ['thread finished', summaryView.status === 'finished'],
+  ['thread waits for finish confirmation first', waitingSummaryView.status === 'awaiting_finish_confirmation'],
   ['task A expanded first', calls[0] === 'execute:1:主任务A：先调查再完成'],
   ['child A1 executed', calls.includes('execute:1.1:子任务A1：收集背景')],
   ['child A2 executed', calls.includes('execute:1.2:子任务A2：整理结论')],
   ['task B executed after child tasks', calls.indexOf('execute:2:主任务B：收尾任务') > calls.indexOf('execute:1.2:子任务A2：整理结论')],
-  ['finalize called', calls[calls.length - 1] === 'finalize'],
+  ['finalize called after confirm finish', calls[calls.length - 1] === 'finalize'],
   ['tree contains child A1', treeText.includes('1.1. 子任务A1：收集背景 [已完成]')],
   ['tree contains child A2', treeText.includes('1.2. 子任务A2：整理结论 [已完成]')],
   ['tree contains task B done', treeText.includes('2. 主任务B：收尾任务 [已完成]')],
-  ['summary finished text present', summaryText.includes('状态：已完成')],
+  ['waiting summary text present', waitingSummaryText.includes('状态：等待你确认是否结束')],
+  ['finished summary text present', finishedSummaryText.includes('状态：已完成')],
   ['node1 completed after children', node1View.node.status === 'done'],
 ];
 

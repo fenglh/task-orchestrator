@@ -4,6 +4,7 @@ import type { TaskNode } from "./task-node.ts";
 export type TaskThreadStatus =
   | "running"
   | "awaiting_plan_confirmation"
+  | "awaiting_finish_confirmation"
   | "waiting_human"
   | "paused"
   | "finished"

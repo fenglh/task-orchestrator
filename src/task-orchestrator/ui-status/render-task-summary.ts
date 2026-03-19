@@ -6,6 +6,8 @@ function statusLabel(status: TaskSummaryView["status"]): string {
       return "运行中";
     case "waiting_human":
       return "等待你的输入";
+    case "awaiting_finish_confirmation":
+      return "等待你确认是否结束";
     case "failed":
       return "等待你决定如何继续";
     case "finished":
@@ -44,6 +46,9 @@ function nextStepHint(view: TaskSummaryView): string | undefined {
   if (view.status === "awaiting_plan_confirmation") {
     return "下一步：请确认是否开始执行；你也可以先查看任务树或继续细化某一步。";
   }
+  if (view.status === "awaiting_finish_confirmation") {
+    return "下一步：请先查看建议复核的节点；确认无误后使用 `/task finish` 或直接回复“确认结束”。";
+  }
   if (view.status === "waiting_human" && view.blocked) {
     return "下一步：直接回复所需输入，或使用 `/task tree` / `/task pause` / `/task cancel`。";
   }
@@ -68,6 +73,10 @@ export function renderTaskSummary(view: TaskSummaryView): string {
 
   if (view.status === "awaiting_plan_confirmation") {
     lines.push("说明：计划已生成，尚未执行。请确认是否开始执行。");
+  }
+
+  if (view.status === "awaiting_finish_confirmation") {
+    lines.push("说明：执行链已经跑完，但结果里包含需要人工复核的节点，因此系统不会自动判定任务已完成。");
   }
 
   if (view.currentNode) {

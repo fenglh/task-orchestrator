@@ -121,14 +121,14 @@ const channelContext = {
   userId: 'tester',
 };
 
-const thread = await orchestrator.startTask('运行 expand modes smoke test', channelContext);
-const summaryView = await orchestrator.getTaskStatus(thread.threadId, 'summary');
+let thread = await orchestrator.startTask('运行 expand modes smoke test', channelContext);
+const waitingSummaryView = await orchestrator.getTaskStatus(thread.threadId, 'summary');
 const treeView = await orchestrator.getTaskStatus(thread.threadId, 'tree');
 const node1View = await orchestrator.getTaskStatus(thread.threadId, 'node', '1');
 const node2View = await orchestrator.getTaskStatus(thread.threadId, 'node', '2');
 
 console.log('--- SUMMARY ---');
-console.log(renderTaskSummary(summaryView));
+console.log(renderTaskSummary(waitingSummaryView));
 console.log('');
 console.log('--- TREE ---');
 console.log(renderTaskTree(treeView));
@@ -139,24 +139,30 @@ console.log('');
 console.log('--- NODE 2 DETAIL ---');
 console.log(renderNodeDetail(node2View));
 console.log('');
+
+thread = await orchestrator.confirmTaskFinish(thread.threadId);
+const finishedSummaryView = await orchestrator.getTaskStatus(thread.threadId, 'summary');
+console.log('--- FINISHED SUMMARY ---');
+console.log(renderTaskSummary(finishedSummaryView));
+console.log('');
 console.log('--- CALLS ---');
 console.log(adapter.getCalls().join('\n'));
 console.log('');
 
 const calls = adapter.getCalls();
 const treeText = renderTaskTree(treeView);
-
 const task2Executions = calls.filter((line) => line === 'execute:2:任务B：suspend 模式').length;
 
 const assertions = [
-  ['thread finished', summaryView.status === 'finished'],
+  ['thread waits for finish confirmation', waitingSummaryView.status === 'awaiting_finish_confirmation'],
   ['replace parent executed once', calls.filter((line) => line === 'execute:1:任务A：replace 模式').length === 1],
   ['replace child A1 executed', calls.includes('execute:1.1:任务A1')],
   ['replace child A2 executed', calls.includes('execute:1.2:任务A2')],
   ['suspend parent executed twice', task2Executions === 2],
   ['suspend child B1 executed', calls.includes('execute:2.1:任务B1')],
   ['suspend child B2 executed', calls.includes('execute:2.2:任务B2')],
-  ['finalize called', calls[calls.length - 1] === 'finalize'],
+  ['finalize called after confirm finish', calls[calls.length - 1] === 'finalize'],
+  ['finished summary status', finishedSummaryView.status === 'finished'],
   ['tree contains replace children done', treeText.includes('1.1. 任务A1 [已完成]') && treeText.includes('1.2. 任务A2 [已完成]')],
   ['tree contains suspend children done', treeText.includes('2.1. 任务B1 [已完成]') && treeText.includes('2.2. 任务B2 [已完成]')],
   ['node1 final status done', node1View.node.status === 'done'],

@@ -9,6 +9,16 @@ import { compileTaskGraph } from "../graph/compile.ts";
 import type { GraphRuntimeContext } from "../graph/state.ts";
 import { applyPauseOrCancel } from "./pause-cancel.ts";
 import { shouldAutoAdvance } from "./auto-advance.ts";
+import { emitTaskEvent } from "../ui-status/emit-task-event.ts";
+
+function threadNeedsFinishConfirmation(thread: TaskThread): boolean {
+  return Object.values(thread.nodes).some((node) =>
+    node.id !== thread.rootTaskId &&
+    ["needs_review", "partial", "failed", "not_evaluated"].includes(
+      node.completionEvidence?.status ?? "",
+    )
+  );
+}
 
 function shouldTransitionToFinalize(thread: TaskThread): boolean {
   return (
@@ -36,6 +46,7 @@ export async function runLoop(
 
     if (
       thread.status === "awaiting_plan_confirmation" ||
+      thread.status === "awaiting_finish_confirmation" ||
       thread.status === "waiting_human" ||
       thread.status === "paused" ||
       thread.status === "finished" ||
@@ -54,6 +65,18 @@ export async function runLoop(
     reconcileWaitingNodes(thread, context.now());
 
     if (shouldTransitionToFinalize(thread)) {
+      if (threadNeedsFinishConfirmation(thread)) {
+        thread.status = "awaiting_finish_confirmation";
+        thread.activeNodeId = undefined;
+        thread.latestUserVisibleSummary = "结果已生成，但其中包含需要人工复核的节点。请先查看结果，再确认是否结束任务。";
+        await emitTaskEvent(thread, {
+          type: "task_progress",
+          message: thread.latestUserVisibleSummary,
+          timestamp: context.now(),
+        }, context.publishTaskEvent);
+        await context.taskThreadRepo.save(thread);
+        break;
+      }
       thread.phase = "finalizing";
     }
 

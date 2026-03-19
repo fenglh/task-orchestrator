@@ -10,6 +10,8 @@ function statusLabel(status?: string): string {
       return "等待你的输入";
     case "awaiting_plan_confirmation":
       return "等待你确认开始";
+    case "awaiting_finish_confirmation":
+      return "等待你确认是否结束";
     case "paused":
       return "已暂停";
     case "finished":

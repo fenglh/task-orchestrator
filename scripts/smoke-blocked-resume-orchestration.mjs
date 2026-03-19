@@ -108,13 +108,13 @@ console.log(blockedText);
 console.log('');
 
 thread = await orchestrator.resumeTask(thread.threadId, 'APPROVED-42');
-const summaryView = await orchestrator.getTaskStatus(thread.threadId, 'summary');
+const waitingSummaryView = await orchestrator.getTaskStatus(thread.threadId, 'summary');
 const treeView = await orchestrator.getTaskStatus(thread.threadId, 'tree');
 const node1View = await orchestrator.getTaskStatus(thread.threadId, 'node', '1');
 const node2View = await orchestrator.getTaskStatus(thread.threadId, 'node', '2');
 
 console.log('--- FINAL SUMMARY ---');
-console.log(renderTaskSummary(summaryView));
+console.log(renderTaskSummary(waitingSummaryView));
 console.log('');
 console.log('--- TREE ---');
 console.log(renderTaskTree(treeView));
@@ -124,6 +124,12 @@ console.log(renderNodeDetail(node1View));
 console.log('');
 console.log('--- NODE 2 DETAIL ---');
 console.log(renderNodeDetail(node2View));
+console.log('');
+
+thread = await orchestrator.confirmTaskFinish(thread.threadId);
+const finishedSummaryView = await orchestrator.getTaskStatus(thread.threadId, 'summary');
+console.log('--- FINISHED SUMMARY ---');
+console.log(renderTaskSummary(finishedSummaryView));
 console.log('');
 console.log('--- CALLS ---');
 console.log(adapter.getCalls().join('\n'));
@@ -136,9 +142,10 @@ const assertions = [
   ['initial thread waiting human', blockedSummary.status === 'waiting_human'],
   ['blocked message rendered', blockedText.includes('请提供一个批准码')],
   ['resume call consumed input', calls.includes('execute:1:主任务A：先拿到缺失输入:APPROVED-42')],
-  ['thread finished after resume', summaryView.status === 'finished'],
+  ['thread waits for finish confirmation after resume', waitingSummaryView.status === 'awaiting_finish_confirmation'],
   ['task B executed after resume', calls.indexOf('execute:2:主任务B：后续任务:') > calls.indexOf('execute:1:主任务A：先拿到缺失输入:APPROVED-42')],
-  ['finalize called', calls[calls.length - 1] === 'finalize'],
+  ['finalize called after confirm finish', calls[calls.length - 1] === 'finalize'],
+  ['finished summary status', finishedSummaryView.status === 'finished'],
   ['tree shows task 1 done', treeText.includes('1. 主任务A：先拿到缺失输入 [已完成]')],
   ['tree shows task 2 done', treeText.includes('2. 主任务B：后续任务 [已完成]')],
   ['node1 summary mentions resume input', (node1View.node.userVisibleSummary ?? '').includes('APPROVED-42')],

@@ -265,6 +265,25 @@ export async function routeMessage(
       }
     }
 
+    if (activeThread?.status === "awaiting_finish_confirmation") {
+      const intent = detectTaskIntent(input.message);
+
+      if (intent.kind === "confirm_finish") {
+        const thread = await orchestrator.confirmTaskFinish(activeThreadId);
+        return {
+          mode: "task",
+          text: await renderThreadResponse(orchestrator, thread),
+          threadId: activeThreadId,
+        };
+      }
+
+      return {
+        mode: "task",
+        text: renderTaskSummary(await orchestrator.getTaskStatus(activeThreadId, "summary")),
+        threadId: activeThreadId,
+      };
+    }
+
     if (activeThread?.status === "waiting_human") {
       const classification = classifyWaitingHumanMessage(input.message, activeThread);
 

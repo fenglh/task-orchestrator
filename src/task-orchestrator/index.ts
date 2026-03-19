@@ -175,6 +175,26 @@ export class TaskOrchestrator {
     return this.run(thread);
   }
 
+  async confirmTaskFinish(threadId: string): Promise<TaskThread> {
+    const thread = await this.requireThread(threadId);
+    if (thread.status !== "awaiting_finish_confirmation") {
+      throw new Error("Task is not waiting for finish confirmation");
+    }
+
+    thread.status = "running";
+    thread.phase = "finalizing";
+    thread.updatedAt = this.now();
+
+    await this.taskThreadRepo.save(thread);
+    await this.updateChannelState(thread.channelConversationId, {
+      mode: "task",
+      activeThreadId: thread.threadId,
+      awaitingInputThreadId: undefined,
+    });
+
+    return this.run(thread);
+  }
+
   async pauseTask(threadId: string): Promise<TaskThread> {
     const thread = await this.requireThread(threadId);
     thread.pauseRequested = true;
