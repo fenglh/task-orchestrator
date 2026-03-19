@@ -74,6 +74,7 @@ export class OpenClawTaskExecutionAdapter implements TaskExecutionAdapter {
   constructor(options: OpenClawTaskExecutionAdapterOptions) {
     this.runtime = options.runtime;
     this.eventSink = options.eventSink;
+    this.workspaceDir = options.workspaceDir;
   }
 
   consumeRuntimeEvidence(nodeId: string): RuntimeEvidenceSnapshot | undefined {
