@@ -1,7 +1,13 @@
+import type {
+  NodeCompletionContract,
+  NodeCompletionEvidence,
+} from "./completion-contract.ts";
+
 export interface TaskDraft {
   title: string;
   goal: string;
   successCriteria: string;
+  completionContract?: NodeCompletionContract;
 }
 
 export interface DoneResult {
@@ -10,6 +16,7 @@ export interface DoneResult {
   userVisibleSummary?: string;
   evidence?: string[];
   artifacts?: string[];
+  completionEvidence?: NodeCompletionEvidence;
 }
 
 export interface ExpandResult {

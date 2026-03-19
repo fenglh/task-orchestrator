@@ -1,3 +1,8 @@
+import type {
+  NodeCompletionContract,
+  NodeCompletionEvidence,
+} from "./completion-contract.ts";
+
 export type TaskNodeStatus =
   | "pending"
   | "running"
@@ -15,6 +20,8 @@ export interface TaskNode {
   title: string;
   goal: string;
   successCriteria: string;
+  completionContract?: NodeCompletionContract;
+  completionEvidence?: NodeCompletionEvidence;
   status: TaskNodeStatus;
   children: string[];
   report?: string;
