@@ -108,7 +108,7 @@ const assertions = [
   ['final status finished', finalSummary.status === 'finished'],
   ['node executed three times', calls.filter((line) => line.startsWith('execute:1:')).length === 3],
   ['finalize called', calls[calls.length - 1] === 'finalize'],
-  ['tree shows node done', treeText.includes('1. 任务A：连续 retry 两次 [done]')],
+  ['tree shows node done', treeText.includes('1. 任务A：连续 retry 两次 [已完成]')],
   ['node detail shows final success summary', (node1View.node.userVisibleSummary ?? '').includes('第 3 次执行成功')],
 ];
 
