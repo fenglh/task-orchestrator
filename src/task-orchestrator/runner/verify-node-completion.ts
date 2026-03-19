@@ -13,6 +13,11 @@ interface VerifyNodeCompletionInput {
   node: TaskNode;
   result: DoneResult;
   workspaceDir?: string;
+  runtimeEvidence?: {
+    toolCalls?: string[];
+    modifiedArtifacts?: string[];
+    commandLabels?: string[];
+  };
   now: string;
 }
 
@@ -56,6 +61,7 @@ async function runCheck(
   check: AcceptanceCheck,
   result: DoneResult,
   workspaceDir?: string,
+  runtimeEvidence?: VerifyNodeCompletionInput["runtimeEvidence"],
 ): Promise<AcceptanceCheckResult> {
   try {
     switch (check.kind) {
@@ -76,6 +82,22 @@ async function runCheck(
             typeof text === "string" && text.trim().length > 0
               ? "文件非空"
               : "文件为空、文件不存在或无法读取",
+        };
+      }
+      case "json_parseable": {
+        const text = await readTextFromCheck(check, result, workspaceDir);
+        if (typeof text !== "string") {
+          return {
+            checkId: buildCheckId(check),
+            status: "failed",
+            detail: "未找到可用于 JSON 解析的文本",
+          };
+        }
+        JSON.parse(text);
+        return {
+          checkId: buildCheckId(check),
+          status: "passed",
+          detail: "JSON 可成功解析",
         };
       }
       case "json_has_keys": {
@@ -122,20 +144,34 @@ async function runCheck(
           detail: `文本长度=${length}，要求>=${check.minLength}`,
         };
       }
-      case "json_parseable": {
-        const text = await readTextFromCheck(check, result, workspaceDir);
-        if (typeof text !== "string") {
-          return {
-            checkId: buildCheckId(check),
-            status: "failed",
-            detail: "未找到可用于 JSON 解析的文本",
-          };
-        }
-        JSON.parse(text);
+      case "tool_call_observed": {
+        const observed = runtimeEvidence?.toolCalls ?? [];
         return {
           checkId: buildCheckId(check),
-          status: "passed",
-          detail: "JSON 可成功解析",
+          status: observed.includes(check.tool) ? "passed" : "failed",
+          detail: observed.includes(check.tool)
+            ? `观察到工具调用: ${check.tool}`
+            : `未观察到工具调用: ${check.tool}`,
+        };
+      }
+      case "artifact_modified": {
+        const observed = runtimeEvidence?.modifiedArtifacts ?? [];
+        return {
+          checkId: buildCheckId(check),
+          status: observed.includes(check.path) ? "passed" : "failed",
+          detail: observed.includes(check.path)
+            ? `观察到产物修改: ${check.path}`
+            : `未观察到产物修改: ${check.path}`,
+        };
+      }
+      case "command_exit_success": {
+        const observed = runtimeEvidence?.commandLabels ?? [];
+        return {
+          checkId: buildCheckId(check),
+          status: observed.includes(check.commandLabel) ? "passed" : "failed",
+          detail: observed.includes(check.commandLabel)
+            ? `观察到命令执行: ${check.commandLabel}`
+            : `未观察到命令执行: ${check.commandLabel}`,
         };
       }
       default:
@@ -154,21 +190,14 @@ async function runCheck(
   }
 }
 
-function mergeContract(
-  nodeContract?: NodeCompletionContract,
-  resultEvidence?: NodeCompletionEvidence,
-): NodeCompletionContract | undefined {
-  if (!nodeContract && !resultEvidence) {
-    return undefined;
-  }
-
+function mergeContract(nodeContract?: NodeCompletionContract): NodeCompletionContract | undefined {
   return nodeContract;
 }
 
 export async function verifyNodeCompletion(
   input: VerifyNodeCompletionInput,
 ): Promise<NodeCompletionEvidence | undefined> {
-  const contract = mergeContract(input.node.completionContract, input.result.completionEvidence);
+  const contract = mergeContract(input.node.completionContract);
   const fallbackEvidence = input.result.completionEvidence;
 
   if (!contract?.acceptanceChecks?.length) {
@@ -196,7 +225,9 @@ export async function verifyNodeCompletion(
   }
 
   const checkResults = await Promise.all(
-    contract.acceptanceChecks.map((check) => runCheck(check, input.result, input.workspaceDir)),
+    contract.acceptanceChecks.map((check) =>
+      runCheck(check, input.result, input.workspaceDir, input.runtimeEvidence),
+    ),
   );
 
   const failedCount = checkResults.filter((item) => item.status === "failed").length;

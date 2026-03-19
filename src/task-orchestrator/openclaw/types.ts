@@ -27,6 +27,12 @@ export interface OpenClawPromptResponse {
   events?: OpenClawSessionEvent[];
 }
 
+export interface RuntimeEvidenceSnapshot {
+  toolCalls?: string[];
+  modifiedArtifacts?: string[];
+  commandLabels?: string[];
+}
+
 export interface OpenClawRuntime {
   ensureSession(input: {
     sessionId: string;

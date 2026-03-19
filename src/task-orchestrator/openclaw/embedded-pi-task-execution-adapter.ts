@@ -8,6 +8,7 @@ import type {
   OpenClawEmbeddedPiRunner,
   OpenClawEventSink,
   OpenClawSessionEvent,
+  RuntimeEvidenceSnapshot,
 } from "./types.ts";
 import type {
   ExecuteNodeInput,
@@ -24,6 +25,40 @@ interface PlannedTasksPayload {
 
 interface FinalizePayload {
   summary: string;
+}
+
+function summarizeRuntimeEvidence(events: OpenClawSessionEvent[]): RuntimeEvidenceSnapshot {
+  const toolCalls = new Set<string>();
+  const modifiedArtifacts = new Set<string>();
+  const commandLabels = new Set<string>();
+
+  for (const event of events) {
+    if (event.type === "tool_execution_start" || event.type === "tool_execution_end") {
+      const payload = (event.payload ?? {}) as Record<string, unknown>;
+      const toolName = typeof payload.tool === "string"
+        ? payload.tool
+        : typeof payload.toolName === "string"
+          ? payload.toolName
+          : undefined;
+      if (toolName) toolCalls.add(toolName);
+
+      const path = typeof payload.path === "string"
+        ? payload.path
+        : typeof payload.file_path === "string"
+          ? payload.file_path
+          : undefined;
+      if (path) modifiedArtifacts.add(path);
+
+      const command = typeof payload.command === "string" ? payload.command : undefined;
+      if (command) commandLabels.add(command);
+    }
+  }
+
+  return {
+    toolCalls: [...toolCalls],
+    modifiedArtifacts: [...modifiedArtifacts],
+    commandLabels: [...commandLabels],
+  };
 }
 
 export interface EmbeddedPiTaskExecutionAdapterOptions {
@@ -46,6 +81,7 @@ export class EmbeddedPiTaskExecutionAdapter implements TaskExecutionAdapter {
   private readonly model?: string;
   private readonly timeoutMs?: number;
   private readonly eventSink?: OpenClawEventSink;
+  private readonly runtimeEvidence = new Map<string, RuntimeEvidenceSnapshot>();
 
   constructor(options: EmbeddedPiTaskExecutionAdapterOptions) {
     this.runner = options.runner;
@@ -58,13 +94,19 @@ export class EmbeddedPiTaskExecutionAdapter implements TaskExecutionAdapter {
     this.eventSink = options.eventSink;
   }
 
+  consumeRuntimeEvidence(nodeId: string): RuntimeEvidenceSnapshot | undefined {
+    const snapshot = this.runtimeEvidence.get(nodeId);
+    this.runtimeEvidence.delete(nodeId);
+    return snapshot;
+  }
+
   async planRoot(input: PlanRootInput): Promise<TaskDraft[]> {
     const result = await this.run(input.thread.threadId, input.thread.sessionId, {
       prompt: buildPlanRootPrompt(input),
       runIdSuffix: "plan-root",
     });
 
-    return parseJsonPayload<PlannedTasksPayload>(result).tasks;
+    return parseJsonPayload<PlannedTasksPayload>(result.text).tasks;
   }
 
   async executeNode(input: ExecuteNodeInput): Promise<TaskResult> {
@@ -73,7 +115,8 @@ export class EmbeddedPiTaskExecutionAdapter implements TaskExecutionAdapter {
       runIdSuffix: `execute-${input.node.id}`,
     });
 
-    return parseJsonPayload<TaskResult>(result);
+    this.runtimeEvidence.set(input.node.id, summarizeRuntimeEvidence(result.events));
+    return parseJsonPayload<TaskResult>(result.text);
   }
 
   async finalize(input: FinalizeInput): Promise<{ summary: string }> {
@@ -82,7 +125,7 @@ export class EmbeddedPiTaskExecutionAdapter implements TaskExecutionAdapter {
       runIdSuffix: "finalize",
     });
 
-    return parseJsonPayload<FinalizePayload>(result);
+    return parseJsonPayload<FinalizePayload>(result.text);
   }
 
   async refineNode(input: RefineNodeInput): Promise<ExpandResult> {
@@ -91,7 +134,7 @@ export class EmbeddedPiTaskExecutionAdapter implements TaskExecutionAdapter {
       runIdSuffix: `refine-${input.node.id}`,
     });
 
-    return parseJsonPayload<ExpandResult>(result);
+    return parseJsonPayload<ExpandResult>(result.text);
   }
 
   private async run(
@@ -101,8 +144,9 @@ export class EmbeddedPiTaskExecutionAdapter implements TaskExecutionAdapter {
       prompt: string;
       runIdSuffix: string;
     },
-  ): Promise<string> {
+  ): Promise<{ text: string; events: OpenClawSessionEvent[] }> {
     let lastBlockText = "";
+    const capturedEvents: OpenClawSessionEvent[] = [];
 
     const result = await this.runner.runEmbeddedPiAgent({
       sessionId,
@@ -125,11 +169,12 @@ export class EmbeddedPiTaskExecutionAdapter implements TaskExecutionAdapter {
         });
       },
       onAgentEvent: async (event) => {
+        capturedEvents.push(event);
         await this.emitEvent(threadId, sessionId, event);
       },
     });
 
-    return result.text ?? lastBlockText;
+    return { text: result.text ?? lastBlockText, events: capturedEvents };
   }
 
   private async emitEvent(

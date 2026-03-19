@@ -15,6 +15,7 @@ import type {
   OpenClawEventSink,
   OpenClawPromptResponse,
   OpenClawRuntime,
+  RuntimeEvidenceSnapshot,
 } from "./types.ts";
 
 interface PlannedTasksPayload {
@@ -23,6 +24,40 @@ interface PlannedTasksPayload {
 
 interface FinalizePayload {
   summary: string;
+}
+
+function summarizeRuntimeEvidence(events?: OpenClawPromptResponse["events"]): RuntimeEvidenceSnapshot {
+  const toolCalls = new Set<string>();
+  const modifiedArtifacts = new Set<string>();
+  const commandLabels = new Set<string>();
+
+  for (const event of events ?? []) {
+    if (event.type === "tool_execution_start" || event.type === "tool_execution_end") {
+      const payload = (event.payload ?? {}) as Record<string, unknown>;
+      const toolName = typeof payload.tool === "string"
+        ? payload.tool
+        : typeof payload.toolName === "string"
+          ? payload.toolName
+          : undefined;
+      if (toolName) toolCalls.add(toolName);
+
+      const path = typeof payload.path === "string"
+        ? payload.path
+        : typeof payload.file_path === "string"
+          ? payload.file_path
+          : undefined;
+      if (path) modifiedArtifacts.add(path);
+
+      const command = typeof payload.command === "string" ? payload.command : undefined;
+      if (command) commandLabels.add(command);
+    }
+  }
+
+  return {
+    toolCalls: [...toolCalls],
+    modifiedArtifacts: [...modifiedArtifacts],
+    commandLabels: [...commandLabels],
+  };
 }
 
 export interface OpenClawTaskExecutionAdapterOptions {
@@ -34,10 +69,17 @@ export class OpenClawTaskExecutionAdapter implements TaskExecutionAdapter {
   readonly workspaceDir?: string;
   private readonly runtime: OpenClawRuntime;
   private readonly eventSink?: OpenClawEventSink;
+  private readonly runtimeEvidence = new Map<string, RuntimeEvidenceSnapshot>();
 
   constructor(options: OpenClawTaskExecutionAdapterOptions) {
     this.runtime = options.runtime;
     this.eventSink = options.eventSink;
+  }
+
+  consumeRuntimeEvidence(nodeId: string): RuntimeEvidenceSnapshot | undefined {
+    const snapshot = this.runtimeEvidence.get(nodeId);
+    this.runtimeEvidence.delete(nodeId);
+    return snapshot;
   }
 
   async planRoot(input: PlanRootInput): Promise<TaskDraft[]> {
@@ -65,6 +107,7 @@ export class OpenClawTaskExecutionAdapter implements TaskExecutionAdapter {
       },
     });
 
+    this.runtimeEvidence.set(input.node.id, summarizeRuntimeEvidence(response.events));
     return parseJsonPayload<TaskResult>(response.text);
   }
 

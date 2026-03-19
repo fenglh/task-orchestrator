@@ -29,6 +29,7 @@ export async function executeCurrent(
         node,
         result,
         workspaceDir: context.adapter.workspaceDir,
+        runtimeEvidence: context.adapter.consumeRuntimeEvidence?.(node.id),
         now: context.now(),
       });
       node.pendingResumeInput = undefined;

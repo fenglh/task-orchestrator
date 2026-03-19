@@ -30,4 +30,9 @@ export interface TaskExecutionAdapter {
   executeNode(input: ExecuteNodeInput): Promise<TaskResult>;
   finalize(input: FinalizeInput): Promise<{ summary: string }>;
   refineNode(input: RefineNodeInput): Promise<ExpandResult>;
+  consumeRuntimeEvidence?(nodeId: string): {
+    toolCalls?: string[];
+    modifiedArtifacts?: string[];
+    commandLabels?: string[];
+  } | undefined;
 }
