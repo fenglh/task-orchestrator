@@ -98,6 +98,31 @@ Most common current working `runnerModule` on this machine:
 
 - `/opt/homebrew/lib/node_modules/openclaw/dist/extensionAPI.js`
 
+## Development smoke tests
+
+This repo now includes local smoke tests that validate the main orchestration paths without requiring a real provider:
+
+```bash
+node scripts/smoke-task-orchestrator.mjs
+node scripts/smoke-dynamic-orchestration.mjs
+node scripts/smoke-blocked-resume-orchestration.mjs
+node scripts/smoke-expand-modes.mjs
+node scripts/smoke-retry-skip-orchestration.mjs
+```
+
+What they cover:
+
+- `smoke-task-orchestrator.mjs`
+  - contract → evidence → summary/tree/node detail happy path
+- `smoke-dynamic-orchestration.mjs`
+  - dynamic expand → child tasks → parent reconcile → next task → finalize
+- `smoke-blocked-resume-orchestration.mjs`
+  - blocked → waiting_human → resume with input → continue → finalize
+- `smoke-expand-modes.mjs`
+  - `replace` vs `suspend` semantics
+- `smoke-retry-skip-orchestration.mjs`
+  - failed node → retry / skip → continue / finalize
+
 ## Development note
 
 The plugin runtime currently loads `runEmbeddedPiAgent()` via dynamic import because the public plugin SDK docs do not expose a dedicated embedded-pi runner helper for third-party plugins.
