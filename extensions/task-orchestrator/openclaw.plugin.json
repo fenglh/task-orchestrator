@@ -1,0 +1,94 @@
+{
+  "id": "task-orchestrator",
+  "name": "Task Orchestrator",
+  "description": "LangGraph-style task orchestration for complex WebChat tasks on top of OpenClaw embedded pi sessions.",
+  "runtime": "./src/index.ts",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "enabled": {
+        "type": "boolean",
+        "default": true
+      },
+      "storageDir": {
+        "type": "string"
+      },
+      "sessionDir": {
+        "type": "string"
+      },
+      "workspaceDir": {
+        "type": "string"
+      },
+      "runnerModule": {
+        "type": "string",
+        "description": "Optional module path that exports runEmbeddedPiAgent(). If omitted, the plugin will try common OpenClaw runner locations first."
+      },
+      "runnerExport": {
+        "type": "string",
+        "default": "runEmbeddedPiAgent"
+      },
+      "provider": {
+        "type": "string"
+      },
+      "model": {
+        "type": "string"
+      },
+      "timeoutMs": {
+        "type": "number",
+        "minimum": 1000
+      },
+      "previewPlanByDefault": {
+        "type": "boolean",
+        "default": true,
+        "description": "When true, complex tasks stop after planning and wait for user confirmation before execution."
+      },
+      "fallbackGatewayMethod": {
+        "type": "string",
+        "default": "chat.send",
+        "description": "Optional gateway method name to handle normal chat messages when the orchestrator does not take over."
+      },
+      "progressGatewayMethod": {
+        "type": "string",
+        "description": "Optional gateway method name used to push task progress messages back to the channel."
+      }
+    },
+    "required": [
+    ]
+  },
+  "uiHints": {
+    "storageDir": {
+      "label": "Task Storage Dir",
+      "placeholder": "/var/lib/openclaw/task-orchestrator"
+    },
+    "sessionDir": {
+      "label": "Pi Session Dir",
+      "placeholder": "/var/lib/openclaw/task-orchestrator/pi-sessions"
+    },
+    "workspaceDir": {
+      "label": "Workspace Dir",
+      "placeholder": "/srv/openclaw/workspace"
+    },
+    "runnerModule": {
+      "label": "Runner Module",
+      "placeholder": "./dist/agents/pi-embedded-runner.js"
+    },
+    "provider": {
+      "label": "Provider"
+    },
+    "model": {
+      "label": "Model"
+    },
+    "previewPlanByDefault": {
+      "label": "Preview Plan First"
+    },
+    "fallbackGatewayMethod": {
+      "label": "Fallback Gateway Method",
+      "placeholder": "chat.send"
+    },
+    "progressGatewayMethod": {
+      "label": "Progress Gateway Method",
+      "placeholder": "chat.push"
+    }
+  }
+}
