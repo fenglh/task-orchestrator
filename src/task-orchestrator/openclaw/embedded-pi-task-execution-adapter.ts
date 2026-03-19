@@ -32,6 +32,11 @@ function extractPathFromMeta(meta: string): string | undefined {
   return match?.[1]?.trim();
 }
 
+function extractCommandFromMeta(meta: string): string | undefined {
+  const [head] = meta.split(/\s+\(in\s+/i, 1);
+  return head?.trim() || meta.trim() || undefined;
+}
+
 function summarizeRuntimeEvidence(events: OpenClawSessionEvent[]): RuntimeEvidenceSnapshot {
   const toolCalls = new Set<string>();
   const modifiedArtifacts = new Set<string>();
@@ -204,18 +209,6 @@ export class EmbeddedPiTaskExecutionAdapter implements TaskExecutionAdapter {
     sessionId: string,
     event: OpenClawSessionEvent,
   ): Promise<void> {
-    if (!this.eventSink) {
-      return;
-    }
-
-    await this.eventSink.onEvent({
-      threadId,
-      sessionId,
-      event,
-    });
-  }
-}
-romise<void> {
     if (!this.eventSink) {
       return;
     }
