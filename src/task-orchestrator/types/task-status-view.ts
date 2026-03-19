@@ -62,6 +62,8 @@ export interface TaskNodeDetailView {
     status: TaskNodeStatus;
     report?: string;
     userVisibleSummary?: string;
+    completionContract?: NodeCompletionContract;
+    completionEvidence?: NodeCompletionEvidence;
     evidence: string[];
     children: Array<{
       id: string;
@@ -77,3 +79,4 @@ export type TaskStatusView =
   | TaskSummaryView
   | TaskTreeView
   | TaskNodeDetailView;
+
