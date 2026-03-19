@@ -1,5 +1,94 @@
 import type { TaskNodeDetailView } from "../types/task-status-view.ts";
 
+function describeNodeStatus(status: string): string {
+  switch (status) {
+    case "pending":
+      return "待执行";
+    case "running":
+      return "执行中";
+    case "waiting_children":
+      return "等待子任务";
+    case "waiting_human":
+      return "等待输入";
+    case "blocked":
+      return "已阻塞";
+    case "done":
+      return "已完成";
+    case "failed":
+      return "失败";
+    case "cancelled":
+      return "已跳过";
+    default:
+      return status;
+  }
+}
+
+function describeEvidenceStatus(status?: string): string {
+  switch (status) {
+    case "needs_review":
+      return "建议复核";
+    case "partial":
+      return "部分通过";
+    case "failed":
+      return "检查失败";
+    case "passed":
+      return "检查通过";
+    default:
+      return status ?? "未知";
+  }
+}
+
+function describeOutcomeType(outcomeType?: string): string {
+  switch (outcomeType) {
+    case "file_write":
+      return "写入文件";
+    case "file_edit":
+      return "编辑文件";
+    case "structured_response":
+      return "结构化结果";
+    case "analysis_summary":
+      return "分析总结";
+    case "state_update":
+      return "状态更新";
+    case "external_action":
+      return "外部动作";
+    case "research_note":
+      return "研究笔记";
+    case "unknown":
+      return "未知类型";
+    default:
+      return outcomeType ?? "未知类型";
+  }
+}
+
+function describeReviewMode(reviewMode?: string): string {
+  switch (reviewMode) {
+    case "auto":
+      return "自动判定";
+    case "auto_with_warning":
+      return "自动判定（带提醒）";
+    case "needs_review":
+      return "建议人工复核";
+    default:
+      return reviewMode ?? "未设置";
+  }
+}
+
+function describeCheckStatus(status: string): string {
+  switch (status) {
+    case "passed":
+      return "通过";
+    case "failed":
+      return "失败";
+    case "warning":
+      return "警告";
+    case "skipped":
+      return "跳过";
+    default:
+      return status;
+  }
+}
+
 function suggestedActions(view: TaskNodeDetailView): { notes: string[]; commands: string[] } {
   const notes: string[] = [];
   const commands: string[] = [];
@@ -44,7 +133,7 @@ function suggestedActions(view: TaskNodeDetailView): { notes: string[]; commands
 export function renderNodeDetail(view: TaskNodeDetailView): string {
   const lines = [
     `节点：${view.node.displayPath} ${view.node.title}`,
-    `状态：${view.node.status}`,
+    `状态：${describeNodeStatus(view.node.status)}`,
     `目标：${view.node.goal}`,
     `完成标准：${view.node.successCriteria}`,
   ];
@@ -59,10 +148,10 @@ export function renderNodeDetail(view: TaskNodeDetailView): string {
       lines.push(`- 目标：${view.node.completionContract.objective}`);
     }
     if (view.node.completionContract.outcomeType) {
-      lines.push(`- 结果类型：${view.node.completionContract.outcomeType}`);
+      lines.push(`- 结果类型：${describeOutcomeType(view.node.completionContract.outcomeType)}`);
     }
     if (view.node.completionContract.reviewMode) {
-      lines.push(`- 复核模式：${view.node.completionContract.reviewMode}`);
+      lines.push(`- 复核模式：${describeReviewMode(view.node.completionContract.reviewMode)}`);
     }
     if (view.node.completionContract.expectedArtifacts?.length) {
       lines.push(`- 期望产物数：${view.node.completionContract.expectedArtifacts.length}`);
@@ -74,7 +163,7 @@ export function renderNodeDetail(view: TaskNodeDetailView): string {
 
   if (view.node.completionEvidence) {
     lines.push("完成证据：");
-    lines.push(`- 状态：${view.node.completionEvidence.status}`);
+    lines.push(`- 状态：${describeEvidenceStatus(view.node.completionEvidence.status)}`);
     if (view.node.completionEvidence.status === "needs_review") {
       lines.push("- 解释：这不是失败，而是建议你快速复核该节点；系统只完成了自动证据检查。");
     }
@@ -88,7 +177,7 @@ export function renderNodeDetail(view: TaskNodeDetailView): string {
       lines.push(`- 检查数量：${view.node.completionEvidence.checkResults.length}`);
       lines.push("检查明细：");
       for (const checkResult of view.node.completionEvidence.checkResults) {
-        lines.push(`- [${checkResult.status}] ${checkResult.checkId}: ${checkResult.detail}`);
+        lines.push(`- [${describeCheckStatus(checkResult.status)}] ${checkResult.checkId}: ${checkResult.detail}`);
       }
     }
 
@@ -128,7 +217,7 @@ export function renderNodeDetail(view: TaskNodeDetailView): string {
   if (view.node.children.length > 0) {
     lines.push("子节点：");
     for (const child of view.node.children) {
-      lines.push(`- ${child.displayPath}. ${child.title} [${child.status}]`);
+      lines.push(`- ${child.displayPath}. ${child.title} [${describeNodeStatus(child.status)}]`);
     }
   }
 

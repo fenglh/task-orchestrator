@@ -155,10 +155,10 @@ const assertions = [
   ['child A2 executed', calls.includes('execute:1.2:子任务A2：整理结论')],
   ['task B executed after child tasks', calls.indexOf('execute:2:主任务B：收尾任务') > calls.indexOf('execute:1.2:子任务A2：整理结论')],
   ['finalize called', calls[calls.length - 1] === 'finalize'],
-  ['tree contains child A1', treeText.includes('1.1. 子任务A1：收集背景 [done]')],
-  ['tree contains child A2', treeText.includes('1.2. 子任务A2：整理结论 [done]')],
-  ['tree contains task B done', treeText.includes('2. 主任务B：收尾任务 [done]')],
-  ['summary finished text present', summaryText.includes('状态：finished')],
+  ['tree contains child A1', treeText.includes('1.1. 子任务A1：收集背景 [已完成]')],
+  ['tree contains child A2', treeText.includes('1.2. 子任务A2：整理结论 [已完成]')],
+  ['tree contains task B done', treeText.includes('2. 主任务B：收尾任务 [已完成]')],
+  ['summary finished text present', summaryText.includes('状态：已完成')],
   ['node1 completed after children', node1View.node.status === 'done'],
 ];
 

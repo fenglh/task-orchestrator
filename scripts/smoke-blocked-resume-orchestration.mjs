@@ -139,8 +139,8 @@ const assertions = [
   ['thread finished after resume', summaryView.status === 'finished'],
   ['task B executed after resume', calls.indexOf('execute:2:主任务B：后续任务:') > calls.indexOf('execute:1:主任务A：先拿到缺失输入:APPROVED-42')],
   ['finalize called', calls[calls.length - 1] === 'finalize'],
-  ['tree shows task 1 done', treeText.includes('1. 主任务A：先拿到缺失输入 [done]')],
-  ['tree shows task 2 done', treeText.includes('2. 主任务B：后续任务 [done]')],
+  ['tree shows task 1 done', treeText.includes('1. 主任务A：先拿到缺失输入 [已完成]')],
+  ['tree shows task 2 done', treeText.includes('2. 主任务B：后续任务 [已完成]')],
   ['node1 summary mentions resume input', (node1View.node.userVisibleSummary ?? '').includes('APPROVED-42')],
 ];
 

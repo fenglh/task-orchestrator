@@ -5,20 +5,25 @@ function describeStatus(status: TaskSummaryView["status"]): string {
     case "running":
       return "运行中";
     case "waiting_human":
-      return "等待你的输入";
+      return "等待输入";
     case "failed":
-      return "某个节点失败，等待你决定如何继续";
+      return "失败";
     case "finished":
       return "已完成";
     case "paused":
       return "已暂停";
     case "awaiting_plan_confirmation":
-      return "计划已生成，等待你确认开始";
+      return "等待开始确认";
     case "cancelled":
       return "已取消";
     default:
       return status;
   }
+}
+
+function describeReviewStats(view: TaskSummaryView): string | undefined {
+  if (!view.reviewStats) return undefined;
+  return `建议复核=${view.reviewStats.needsReview}，部分通过=${view.reviewStats.partial}，检查失败=${view.reviewStats.failedChecks}`;
 }
 
 function reviewHint(view: TaskSummaryView): string | undefined {
@@ -76,7 +81,7 @@ function nextStepHint(view: TaskSummaryView): string | undefined {
 export function renderTaskSummary(view: TaskSummaryView): string {
   const lines = [
     `任务：${view.title}`,
-    `状态：${view.status} · ${describeStatus(view.status)}`,
+    `状态：${describeStatus(view.status)}`,
     `进度：${view.progress.done}/${view.progress.total}`,
   ];
 
@@ -85,10 +90,9 @@ export function renderTaskSummary(view: TaskSummaryView): string {
     lines.push(`当前主线焦点：当前主线正在推进节点 ${view.currentNode.displayPath}`);
   }
 
-  if (view.reviewStats) {
-    lines.push(
-      `复核标记：needs_review=${view.reviewStats.needsReview}, partial=${view.reviewStats.partial}, failed_checks=${view.reviewStats.failedChecks}`,
-    );
+  const reviewStatsText = describeReviewStats(view);
+  if (reviewStatsText) {
+    lines.push(`复核标记：${reviewStatsText}`);
   }
 
   const reviewHintText = reviewHint(view);

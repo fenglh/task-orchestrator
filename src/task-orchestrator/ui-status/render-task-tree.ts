@@ -14,7 +14,51 @@ function describeEvidenceStatus(status?: string): string {
     case "passed":
       return "✅ 检查通过";
     default:
-      return status ? `evidence=${status}` : "";
+      return status ? `证据=${status}` : "";
+  }
+}
+
+function describeNodeStatus(status: string): string {
+  switch (status) {
+    case "pending":
+      return "待执行";
+    case "running":
+      return "执行中";
+    case "waiting_children":
+      return "等待子任务";
+    case "waiting_human":
+      return "等待输入";
+    case "blocked":
+      return "已阻塞";
+    case "done":
+      return "已完成";
+    case "failed":
+      return "失败";
+    case "cancelled":
+      return "已跳过";
+    default:
+      return status;
+  }
+}
+
+function describeTaskStatus(status: string): string {
+  switch (status) {
+    case "running":
+      return "运行中";
+    case "waiting_human":
+      return "等待输入";
+    case "failed":
+      return "失败";
+    case "finished":
+      return "已完成";
+    case "paused":
+      return "已暂停";
+    case "awaiting_plan_confirmation":
+      return "等待开始确认";
+    case "cancelled":
+      return "已取消";
+    default:
+      return status;
   }
 }
 
@@ -22,7 +66,7 @@ function renderNode(node: TaskTreeNodeView, indent: string): string[] {
   const evidenceText = describeEvidenceStatus(node.completionEvidenceStatus);
   const evidenceSuffix = evidenceText ? ` {${evidenceText}}` : "";
   const marker = node.isCurrentNode ? "👉 " : node.isSuggestedNode ? "⭐ " : node.isInCurrentPath ? "↳ " : "";
-  const lines = [`${indent}- ${marker}${node.displayPath}. ${node.title} [${node.status}]${evidenceSuffix}`];
+  const lines = [`${indent}- ${marker}${node.displayPath}. ${node.title} [${describeNodeStatus(node.status)}]${evidenceSuffix}`];
 
   for (const child of node.children) {
     lines.push(...renderNode(child, `${indent}  `));
@@ -34,7 +78,7 @@ function renderNode(node: TaskTreeNodeView, indent: string): string[] {
 export function renderTaskTree(view: TaskTreeView): string {
   const lines = [
     `任务：${view.title}`,
-    `状态：${view.status}`,
+    `状态：${describeTaskStatus(view.status)}`,
   ];
 
   if (view.currentNodeRef && view.currentNodeTitle) {

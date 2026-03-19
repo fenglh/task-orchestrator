@@ -142,8 +142,8 @@ const assertions = [
   ['task B executed and failed once', calls.includes('execute:2:任务B：失败后 skip:')],
   ['thread finished after skip', summaryView.status === 'finished'],
   ['finalize called', calls[calls.length - 1] === 'finalize'],
-  ['tree shows task A done', treeText.includes('1. 任务A：失败后 retry [done]')],
-  ['tree shows task B cancelled', treeText.includes('2. 任务B：失败后 skip [cancelled]')],
+  ['tree shows task A done', treeText.includes('1. 任务A：失败后 retry [已完成]')],
+  ['tree shows task B cancelled', treeText.includes('2. 任务B：失败后 skip [已跳过]')],
   ['node1 summary mentions retry success', (node1View.node.userVisibleSummary ?? '').includes('retry 后成功')],
   ['node2 is cancelled', node2View.node.status === 'cancelled'],
 ];
