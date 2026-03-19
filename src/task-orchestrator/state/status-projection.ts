@@ -70,17 +70,20 @@ export function projectSummaryView(thread: TaskThread): TaskSummaryView {
 
 export function projectTreeView(thread: TaskThread): TaskTreeView {
   const rootNode = thread.nodes[thread.rootTaskId];
-  const currentPath = getNodePath(thread, thread.activeNodeId).map(
-    (node) => node.title,
-  );
+  const currentPathNodes = getNodePath(thread, thread.activeNodeId);
+  const currentPath = currentPathNodes.map((node) => `${node.displayPath} ${node.title}`);
+  const currentPathIds = new Set(currentPathNodes.map((node) => node.id));
+  const currentNode = thread.activeNodeId ? thread.nodes[thread.activeNodeId] : undefined;
 
   return {
     kind: "tree",
     threadId: thread.threadId,
     title: thread.title,
     status: thread.status,
+    currentNodeRef: currentNode?.displayPath,
+    currentNodeTitle: currentNode?.title,
     currentPath,
-    tree: rootNode.children.map((childId) => projectTreeNode(thread, childId)),
+    tree: rootNode.children.map((childId) => projectTreeNode(thread, childId, thread.activeNodeId, currentPathIds)),
     updatedAt: thread.updatedAt,
   };
 }

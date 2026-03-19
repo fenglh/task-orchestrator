@@ -21,10 +21,13 @@ function describeEvidenceStatus(status?: string): string {
 function renderNode(node: TaskTreeNodeView, indent: string): string[] {
   const evidenceText = describeEvidenceStatus(node.completionEvidenceStatus);
   const evidenceSuffix = evidenceText ? ` {${evidenceText}}` : "";
-  const lines = [`${indent}- ${node.displayPath}. ${node.title} [${node.status}]${evidenceSuffix}`];
+  const pathMarker = node.isCurrentNode ? "👉 " : node.isInCurrentPath ? "↳ " : "";
+  const lines = [`${indent}- ${pathMarker}${node.displayPath}. ${node.title} [${node.status}]${evidenceSuffix}`];
+
   for (const child of node.children) {
     lines.push(...renderNode(child, `${indent}  `));
   }
+
   return lines;
 }
 
@@ -34,9 +37,15 @@ export function renderTaskTree(view: TaskTreeView): string {
     `Status: ${view.status}`,
   ];
 
+  if (view.currentNodeRef && view.currentNodeTitle) {
+    lines.push(`Current node: ${view.currentNodeRef} ${view.currentNodeTitle}`);
+  }
+
   if (view.currentPath.length > 0) {
     lines.push(`Current path: ${view.currentPath.join(" > ")}`);
   }
+
+  lines.push("Legend: 👉 current node · ↳ current path · ⚠️ review · ⚠️ partial · ❌ failed-checks · ✅ checks-pass");
 
   for (const node of view.tree) {
     lines.push(...renderNode(node, ""));

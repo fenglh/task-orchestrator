@@ -74,6 +74,7 @@ export function renderTaskSummary(view: TaskSummaryView): string {
 
   if (view.currentNode) {
     lines.push(`Current node: ${view.currentNode.displayPath} ${view.currentNode.title}`);
+    lines.push(`Current path focus: 当前主线正在推进节点 ${view.currentNode.displayPath}`);
   }
 
   if (view.reviewStats) {

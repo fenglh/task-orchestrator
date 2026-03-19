@@ -51,6 +51,8 @@ export interface TaskTreeView {
   threadId: string;
   title: string;
   status: TaskThreadStatus;
+  currentNodeRef?: string;
+  currentNodeTitle?: string;
   currentPath: string[];
   tree: TaskTreeNodeView[];
   updatedAt: string;
