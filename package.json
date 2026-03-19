@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "demo": "node src/demo.ts"
+    "demo": "node src/demo.ts",
+    "install:openclaw-plugin": "node scripts/install.mjs"
   }
 }

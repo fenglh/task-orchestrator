@@ -29,6 +29,8 @@ function resolveWorkspaceDir(api: any, pluginConfig: Record<string, unknown>): s
   }
 
   const hostWorkspaceDirCandidates = [
+    api.config?.agents?.defaults?.workspace,
+    api.config?.agents?.workspace,
     api.config?.workspaceDir,
     api.config?.workspace?.rootDir,
     api.config?.workspace?.dir,

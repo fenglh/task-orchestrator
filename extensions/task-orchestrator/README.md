@@ -71,3 +71,27 @@ Example shape:
 ## Development note
 
 The plugin runtime currently loads `runEmbeddedPiAgent()` via dynamic import because the public plugin SDK docs do not expose a dedicated embedded-pi runner helper for third-party plugins.
+
+## Helper installer
+
+This repo also ships a helper installer script for local/manual deployments:
+
+```bash
+node scripts/install.mjs
+```
+
+Or pass the config path explicitly:
+
+```bash
+node scripts/install.mjs /path/to/openclaw.json
+```
+
+It will:
+
+- add the plugin path to `plugins.load.paths`
+- add `task-orchestrator` to `plugins.allow`
+- enable `plugins.entries.task-orchestrator`
+- populate `workspaceDir`, `storageDir`, `sessionDir`, and sensible defaults
+- try to auto-discover `runnerModule`
+- optionally run `openclaw plugins install -l <pluginRoot>`
+- restart the Gateway via `openclaw gateway restart`
