@@ -71,7 +71,7 @@
     },
     "runnerModule": {
       "label": "Runner Module",
-      "placeholder": "./dist/agents/pi-embedded-runner.js"
+      "placeholder": "./dist/extensionAPI.js"
     },
     "provider": {
       "label": "Provider"

@@ -190,6 +190,7 @@ function deriveCandidateRootDirs(configPath) {
 
 function discoverRunnerModule(configPath) {
   const relativeCandidates = [
+    "dist/extensionAPI.js",
     "dist/agents/pi-embedded-runner.js",
     "agents/pi-embedded-runner.js",
     "src/agents/pi-embedded-runner.js",

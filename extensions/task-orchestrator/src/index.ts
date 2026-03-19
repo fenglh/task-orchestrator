@@ -103,6 +103,7 @@ function resolveHostRootDir(api: any): string {
 
 function buildRunnerModuleCandidates(api: any, pluginConfig: Record<string, unknown>): string[] {
   const relativeRunnerCandidates = [
+    "dist/extensionAPI.js",
     "dist/agents/pi-embedded-runner.js",
     "agents/pi-embedded-runner.js",
     "src/agents/pi-embedded-runner.js",
