@@ -1,7 +1,16 @@
 import type { TaskSummaryView } from "../types/task-status-view.ts";
 
-function statusLabel(status: TaskSummaryView["status"]): string {
-  switch (status) {
+function hasReviewRisk(view: TaskSummaryView): boolean {
+  return Boolean(
+    view.reviewStats &&
+      (view.reviewStats.needsReview > 0 ||
+        view.reviewStats.partial > 0 ||
+        view.reviewStats.failedChecks > 0),
+  );
+}
+
+function statusLabel(view: TaskSummaryView): string {
+  switch (view.status) {
     case "running":
       return "运行中";
     case "waiting_human":
@@ -11,7 +20,7 @@ function statusLabel(status: TaskSummaryView["status"]): string {
     case "failed":
       return "等待你决定如何继续";
     case "finished":
-      return "已完成";
+      return hasReviewRisk(view) ? "已结束（含待复核结果）" : "已完成";
     case "paused":
       return "已暂停";
     case "awaiting_plan_confirmation":
@@ -26,7 +35,7 @@ function statusLabel(status: TaskSummaryView["status"]): string {
 function reviewHint(view: TaskSummaryView): string | undefined {
   if (!view.reviewStats) return undefined;
   if (view.reviewStats.needsReview > 0) {
-    return `有 ${view.reviewStats.needsReview} 个节点建议人工复核：这不代表失败，而是说明系统只完成了自动证据检查，建议你快速看一眼节点详情。`;
+    return `有 ${view.reviewStats.needsReview} 个节点建议人工复核：这不代表失败，而是说明系统只完成了自动证据检查。`;
   }
   if (view.reviewStats.partial > 0) {
     return `有 ${view.reviewStats.partial} 个节点只部分通过自动检查，建议优先查看这些节点的检查明细。`;
@@ -58,16 +67,48 @@ function nextStepHint(view: TaskSummaryView): string | undefined {
   if (view.status === "running" && view.currentNode) {
     return "下一步：当前由系统自动推进；如需介入，可查看 `/task tree`。";
   }
+  if (view.status === "finished" && hasReviewRisk(view)) {
+    return "下一步：先看推荐节点，再决定这些结果是否可以接受；如果可以，再视为真正完成。";
+  }
   if (view.status === "finished") {
-    return "下一步：查看任务树或节点详情，确认是否有需要复核的结果。";
+    return "下一步：查看任务树或节点详情，确认是否有需要补充的结果。";
   }
   return undefined;
+}
+
+function softenConclusion(text: string): string {
+  return text
+    .replace(/^结论[:：]\s*/u, "")
+    .replace(/本质上已经不是/gu, "当前更不像")
+    .replace(/而是一个正在演化中的/gu, "更像一个正在演化中的")
+    .replace(/最优先建议不是/gu, "基于当前分析，更建议优先")
+    .replace(/最优先建议是/gu, "基于当前分析，更建议优先")
+    .replace(/必须/gu, "更适合先")
+    .trim();
+}
+
+function shortenToStatusCard(text: string, maxLen = 110): string {
+  const normalized = text.replace(/\s+/g, " ").trim();
+  if (!normalized) return normalized;
+
+  const firstChunk = normalized.split(/(?<=[。！？；;])\s+/u)[0] ?? normalized;
+  if (firstChunk.length <= maxLen) {
+    return firstChunk;
+  }
+
+  return `${firstChunk.slice(0, maxLen - 1).trim()}…`;
+}
+
+function compactLatestSummary(view: TaskSummaryView): string | undefined {
+  if (!view.latestSummary) return undefined;
+  const softened = softenConclusion(view.latestSummary);
+  return shortenToStatusCard(softened, hasReviewRisk(view) ? 100 : 120);
 }
 
 export function renderTaskSummary(view: TaskSummaryView): string {
   const lines = [
     `任务：${view.title}`,
-    `状态：${statusLabel(view.status)}`,
+    `状态：${statusLabel(view)}`,
     `进度：${view.progress.done}/${view.progress.total}`,
   ];
 
@@ -77,6 +118,10 @@ export function renderTaskSummary(view: TaskSummaryView): string {
 
   if (view.status === "awaiting_finish_confirmation") {
     lines.push("说明：执行链已经跑完，但结果里包含需要人工复核的节点，因此系统不会自动判定任务已完成。");
+  }
+
+  if (view.status === "finished" && hasReviewRisk(view)) {
+    lines.push("说明：执行已经结束，但这更像一份待你复核的分析结果，而不是系统替你下的最终定论。");
   }
 
   if (view.currentNode) {
@@ -93,18 +138,23 @@ export function renderTaskSummary(view: TaskSummaryView): string {
   const reviewHintText = reviewHint(view);
   if (reviewHintText) lines.push(`复核提示：${reviewHintText}`);
 
+  if (hasReviewRisk(view)) {
+    lines.push("判断边界：下面的判断来自已读取的文档、脚本和自动证据，属于阶段性分析，不等于最终定论。");
+  }
+
   if (view.blocked) {
     lines.push(`卡住问题：${view.blocked.question}`);
     lines.push(`卡住原因：${view.blocked.whyBlocked}`);
   }
 
-  if (view.latestSummary) {
-    lines.push(`最新进展：${view.latestSummary}`);
+  const compactSummary = compactLatestSummary(view);
+  if (compactSummary) {
+    lines.push(`${hasReviewRisk(view) ? "当前判断（待复核）" : "最新进展"}：${compactSummary}`);
   }
 
   if (view.suggestedNode) {
-    lines.push(`推荐查看节点：${view.suggestedNode.displayPath} ${view.suggestedNode.title}`);
-    lines.push(`推荐理由：${view.suggestedNode.reason}`);
+    lines.push(`建议先看：${view.suggestedNode.displayPath} ${view.suggestedNode.title}`);
+    lines.push(`原因：${view.suggestedNode.reason}`);
     lines.push("推荐命令：");
     lines.push(`- /task node ${view.suggestedNode.displayPath}`);
   }

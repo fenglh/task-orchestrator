@@ -167,7 +167,7 @@ const assertions = [
   ['tree contains child A2', treeText.includes('1.2. 子任务A2：整理结论 [已完成]')],
   ['tree contains task B done', treeText.includes('2. 主任务B：收尾任务 [已完成]')],
   ['waiting summary text present', waitingSummaryText.includes('状态：等待你确认是否结束')],
-  ['finished summary text present', finishedSummaryText.includes('状态：已完成')],
+  ['finished summary text present', finishedSummaryText.includes('状态：已结束（含待复核结果）') || finishedSummaryText.includes('状态：已完成')],
   ['node1 completed after children', node1View.node.status === 'done'],
 ];
 
