@@ -45,7 +45,11 @@ export function renderTaskTree(view: TaskTreeView): string {
     lines.push(`Current path: ${view.currentPath.join(" > ")}`);
   }
 
-  lines.push("Legend: 👉 current node · ↳ current path · ⚠️ review · ⚠️ partial · ❌ failed-checks · ✅ checks-pass");
+  if (view.suggestedNodeRef && view.suggestedNodeTitle) {
+    lines.push(`Suggested node: ${view.suggestedNodeRef} ${view.suggestedNodeTitle}`);
+  }
+
+  lines.push("Legend: 👉 current node · ⭐ suggested node · ↳ current path · ⚠️ review · ⚠️ partial · ❌ failed-checks · ✅ checks-pass");
 
   for (const node of view.tree) {
     lines.push(...renderNode(node, ""));

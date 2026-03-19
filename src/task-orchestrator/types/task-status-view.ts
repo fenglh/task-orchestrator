@@ -54,6 +54,9 @@ export interface TaskTreeNodeView {
   title: string;
   status: TaskNodeStatus;
   completionEvidenceStatus?: string;
+  isInCurrentPath?: boolean;
+  isCurrentNode?: boolean;
+  isSuggestedNode?: boolean;
   children: TaskTreeNodeView[];
 }
 

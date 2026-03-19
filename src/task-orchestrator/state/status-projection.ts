@@ -18,6 +18,7 @@ function projectTreeNode(
   nodeId: string,
   currentNodeId?: string,
   currentPathIds: Set<string> = new Set(),
+  suggestedNodeDisplayPath?: string,
 ): TaskTreeNodeView {
   const node = thread.nodes[nodeId];
 
@@ -29,8 +30,9 @@ function projectTreeNode(
     completionEvidenceStatus: node.completionEvidence?.status,
     isInCurrentPath: currentPathIds.has(node.id),
     isCurrentNode: node.id === currentNodeId,
+    isSuggestedNode: node.displayPath === suggestedNodeDisplayPath,
     children: node.children.map((childId) =>
-      projectTreeNode(thread, childId, currentNodeId, currentPathIds)
+      projectTreeNode(thread, childId, currentNodeId, currentPathIds, suggestedNodeDisplayPath)
     ),
   };
 }
@@ -137,6 +139,7 @@ export function projectTreeView(thread: TaskThread): TaskTreeView {
   const currentPath = currentPathNodes.map((node) => `${node.displayPath} ${node.title}`);
   const currentPathIds = new Set(currentPathNodes.map((node) => node.id));
   const currentNode = thread.activeNodeId ? thread.nodes[thread.activeNodeId] : undefined;
+  const suggestedNode = pickSuggestedNode(thread);
 
   return {
     kind: "tree",
@@ -145,9 +148,11 @@ export function projectTreeView(thread: TaskThread): TaskTreeView {
     status: thread.status,
     currentNodeRef: currentNode?.displayPath,
     currentNodeTitle: currentNode?.title,
+    suggestedNodeRef: suggestedNode?.displayPath,
+    suggestedNodeTitle: suggestedNode?.title,
     currentPath,
     tree: rootNode.children.map((childId) =>
-      projectTreeNode(thread, childId, thread.activeNodeId, currentPathIds)
+      projectTreeNode(thread, childId, thread.activeNodeId, currentPathIds, suggestedNode?.displayPath)
     ),
     updatedAt: thread.updatedAt,
   };
