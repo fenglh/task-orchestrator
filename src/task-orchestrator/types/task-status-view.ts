@@ -22,6 +22,12 @@ export interface TaskSummaryView {
     partial: number;
     failedChecks: number;
   };
+  outcomeStats?: {
+    done: number;
+    cancelled: number;
+    failed: number;
+    blocked: number;
+  };
   currentNode?: {
     id: string;
     displayPath: string;

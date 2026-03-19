@@ -41,6 +41,14 @@ function reviewHint(view: TaskSummaryView): string | undefined {
   return undefined;
 }
 
+function finishedOutcomeHint(view: TaskSummaryView): string | undefined {
+  if (view.status !== "finished" || !view.outcomeStats) {
+    return undefined;
+  }
+
+  return `结束摘要：完成 ${view.outcomeStats.done} 个节点，跳过 ${view.outcomeStats.cancelled} 个节点，仍失败 ${view.outcomeStats.failed} 个节点，当前阻塞 ${view.outcomeStats.blocked} 个节点。`;
+}
+
 function nextStepHint(view: TaskSummaryView): string | undefined {
   if (view.status === "awaiting_plan_confirmation") {
     return "下一步：查看任务树后，使用 `/task resume` 或直接确认开始。";
@@ -95,6 +103,11 @@ export function renderTaskSummary(view: TaskSummaryView): string {
 
   if (view.latestSummary) {
     lines.push(`Latest update: ${view.latestSummary}`);
+  }
+
+  const outcomeHint = finishedOutcomeHint(view);
+  if (outcomeHint) {
+    lines.push(outcomeHint);
   }
 
   const hint = nextStepHint(view);

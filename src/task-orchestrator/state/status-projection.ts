@@ -13,7 +13,12 @@ import {
   listChildNodes,
 } from "./task-tree.ts";
 
-function projectTreeNode(thread: TaskThread, nodeId: string): TaskTreeNodeView {
+function projectTreeNode(
+  thread: TaskThread,
+  nodeId: string,
+  currentNodeId?: string,
+  currentPathIds: Set<string> = new Set(),
+): TaskTreeNodeView {
   const node = thread.nodes[nodeId];
 
   return {
@@ -22,7 +27,11 @@ function projectTreeNode(thread: TaskThread, nodeId: string): TaskTreeNodeView {
     title: node.title,
     status: node.status,
     completionEvidenceStatus: node.completionEvidence?.status,
-    children: node.children.map((childId) => projectTreeNode(thread, childId)),
+    isInCurrentPath: currentPathIds.has(node.id),
+    isCurrentNode: node.id === currentNodeId,
+    children: node.children.map((childId) =>
+      projectTreeNode(thread, childId, currentNodeId, currentPathIds)
+    ),
   };
 }
 
@@ -36,6 +45,21 @@ function collectReviewStats(thread: TaskThread): {
     needsReview: nodes.filter((node) => node.completionEvidence?.status === "needs_review").length,
     partial: nodes.filter((node) => node.completionEvidence?.status === "partial").length,
     failedChecks: nodes.filter((node) => node.completionEvidence?.status === "failed").length,
+  };
+}
+
+function collectOutcomeStats(thread: TaskThread): {
+  done: number;
+  cancelled: number;
+  failed: number;
+  blocked: number;
+} {
+  const nodes = Object.values(thread.nodes).filter((node) => node.displayPath !== "0");
+  return {
+    done: nodes.filter((node) => node.status === "done").length,
+    cancelled: nodes.filter((node) => node.status === "cancelled").length,
+    failed: nodes.filter((node) => node.status === "failed").length,
+    blocked: nodes.filter((node) => node.status === "blocked").length,
   };
 }
 
@@ -56,6 +80,7 @@ export function projectSummaryView(thread: TaskThread): TaskSummaryView {
       : undefined,
     progress: countTaskProgress(thread),
     reviewStats: collectReviewStats(thread),
+    outcomeStats: collectOutcomeStats(thread),
     blocked: thread.blocked
       ? {
           question: thread.blocked.question,
@@ -83,7 +108,9 @@ export function projectTreeView(thread: TaskThread): TaskTreeView {
     currentNodeRef: currentNode?.displayPath,
     currentNodeTitle: currentNode?.title,
     currentPath,
-    tree: rootNode.children.map((childId) => projectTreeNode(thread, childId, thread.activeNodeId, currentPathIds)),
+    tree: rootNode.children.map((childId) =>
+      projectTreeNode(thread, childId, thread.activeNodeId, currentPathIds)
+    ),
     updatedAt: thread.updatedAt,
   };
 }
