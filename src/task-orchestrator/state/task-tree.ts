@@ -111,6 +111,7 @@ export function appendChildTasks(
       title: task.title,
       goal: task.goal,
       successCriteria: task.successCriteria,
+      completionContract: task.completionContract,
       status: "pending",
       children: [],
       needsResume: false,

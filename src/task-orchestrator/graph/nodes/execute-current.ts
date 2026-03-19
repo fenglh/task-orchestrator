@@ -24,6 +24,7 @@ export async function executeCurrent(
       node.userVisibleSummary = result.userVisibleSummary ?? result.report;
       node.evidence.push(...(result.evidence ?? []));
       node.artifacts.push(...(result.artifacts ?? []));
+      node.completionEvidence = result.completionEvidence;
       node.pendingResumeInput = undefined;
       node.finishedAt = context.now();
       thread.blocked = undefined;

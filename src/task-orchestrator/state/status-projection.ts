@@ -88,6 +88,8 @@ export function projectNodeView(
       title: node.title,
       goal: node.goal,
       successCriteria: node.successCriteria,
+      completionContract: node.completionContract,
+      completionEvidence: node.completionEvidence,
       status: node.status,
       report: node.report,
       userVisibleSummary: node.userVisibleSummary,

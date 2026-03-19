@@ -1,5 +1,9 @@
 import type { TaskNodeStatus } from "./task-node.ts";
 import type { TaskThreadStatus } from "./task-thread.ts";
+import type {
+  NodeCompletionContract,
+  NodeCompletionEvidence,
+} from "./completion-contract.ts";
 
 export type TaskStatusViewKind = "summary" | "tree" | "node";
 
