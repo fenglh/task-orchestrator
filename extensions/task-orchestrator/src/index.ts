@@ -1,4 +1,6 @@
-import { join } from "node:path";
+import { execFileSync } from "node:child_process";
+import { existsSync, statSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import {
   OpenClawWebChatTaskHandler,
 } from "../../../src/task-orchestrator/openclaw/webchat-handler.ts";
@@ -20,6 +22,38 @@ function resolvePluginConfig(api: any): Record<string, unknown> {
   }
 
   return api.config?.plugins?.entries?.["task-orchestrator"] ?? {};
+}
+
+function statSafeIsFile(filePath: string): boolean {
+  try {
+    return statSync(filePath).isFile();
+  } catch {
+    return false;
+  }
+}
+
+function resolveCommandPath(command: string): string | undefined {
+  try {
+    return execFileSync("which", [command], { stdio: ["ignore", "pipe", "ignore"] })
+      .toString("utf8")
+      .trim();
+  } catch {
+    return undefined;
+  }
+}
+
+function resolveNpmGlobalRoot(): string | undefined {
+  try {
+    return execFileSync("npm", ["root", "-g"], { stdio: ["ignore", "pipe", "ignore"] })
+      .toString("utf8")
+      .trim();
+  } catch {
+    return undefined;
+  }
+}
+
+function unique(values: Array<string | undefined>): string[] {
+  return [...new Set(values.filter((value): value is string => Boolean(value && value.trim())))];
 }
 
 function resolveWorkspaceDir(api: any, pluginConfig: Record<string, unknown>): string {
@@ -67,6 +101,50 @@ function resolveHostRootDir(api: any): string {
   return process.cwd();
 }
 
+function buildRunnerModuleCandidates(api: any, pluginConfig: Record<string, unknown>): string[] {
+  const relativeRunnerCandidates = [
+    "dist/agents/pi-embedded-runner.js",
+    "agents/pi-embedded-runner.js",
+    "src/agents/pi-embedded-runner.js",
+    "src/agents/pi-embedded-runner.ts",
+  ];
+  const openclawCommandPath = resolveCommandPath("openclaw");
+  const npmGlobalRoot = resolveNpmGlobalRoot();
+  const commandPrefix = openclawCommandPath ? dirname(dirname(resolve(openclawCommandPath))) : undefined;
+  const rootCandidates = unique([
+    pluginConfig.runnerModule as string | undefined,
+    resolveHostRootDir(api),
+    npmGlobalRoot,
+    npmGlobalRoot ? join(npmGlobalRoot, "openclaw") : undefined,
+    npmGlobalRoot ? join(npmGlobalRoot, "@openclaw", "cli") : undefined,
+    commandPrefix,
+    commandPrefix ? join(commandPrefix, "lib", "node_modules") : undefined,
+    commandPrefix ? join(commandPrefix, "lib", "node_modules", "openclaw") : undefined,
+    commandPrefix ? join(commandPrefix, "lib", "node_modules", "@openclaw", "cli") : undefined,
+  ]);
+
+  const absoluteCandidates: string[] = [];
+  for (const rootCandidate of rootCandidates) {
+    if (statSafeIsFile(rootCandidate)) {
+      absoluteCandidates.push(rootCandidate);
+      continue;
+    }
+
+    for (const relativeCandidate of relativeRunnerCandidates) {
+      const absolutePath = resolve(rootCandidate, relativeCandidate);
+      if (existsSync(absolutePath) && statSafeIsFile(absolutePath)) {
+        absoluteCandidates.push(absolutePath);
+      }
+    }
+  }
+
+  return unique([
+    pluginConfig.runnerModule as string | undefined,
+    ...absoluteCandidates,
+    ...relativeRunnerCandidates.map((candidate) => `./${candidate}`),
+  ]);
+}
+
 async function createHandler(api: any): Promise<OpenClawWebChatTaskHandler> {
   const pluginConfig = resolvePluginConfig(api);
   const stateDir =
@@ -75,18 +153,11 @@ async function createHandler(api: any): Promise<OpenClawWebChatTaskHandler> {
   const sessionDir =
     (pluginConfig.sessionDir as string | undefined) ??
     join(stateDir, "pi-sessions");
-  const hostRootDir = resolveHostRootDir(api);
-
   const runner = await createRunnerFromModule({
     runnerModule: pluginConfig.runnerModule as string | undefined,
     runnerExport: pluginConfig.runnerExport as string | undefined,
-    baseDir: hostRootDir,
-    candidateModules: [
-      "./dist/agents/pi-embedded-runner.js",
-      "./agents/pi-embedded-runner.js",
-      "./src/agents/pi-embedded-runner.js",
-      "./src/agents/pi-embedded-runner.ts",
-    ],
+    baseDir: resolveHostRootDir(api),
+    candidateModules: buildRunnerModuleCandidates(api, pluginConfig),
   });
 
   return new OpenClawWebChatTaskHandler({

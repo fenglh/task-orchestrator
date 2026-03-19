@@ -118,6 +118,16 @@ function resolveCommandPath(command) {
   }
 }
 
+function resolveNpmGlobalRoot() {
+  try {
+    return execFileSync("npm", ["root", "-g"], { stdio: ["ignore", "pipe", "ignore"] })
+      .toString("utf8")
+      .trim();
+  } catch {
+    return undefined;
+  }
+}
+
 function unique(values) {
   return [...new Set(values.filter((value) => typeof value === "string" && value.trim()))];
 }
@@ -185,8 +195,25 @@ function discoverRunnerModule(configPath) {
     "src/agents/pi-embedded-runner.js",
     "src/agents/pi-embedded-runner.ts",
   ];
+  const npmGlobalRoot = resolveNpmGlobalRoot();
+  const openclawCommandPath = resolveCommandPath("openclaw");
+  const commandPrefix = openclawCommandPath ? dirname(dirname(resolve(openclawCommandPath))) : undefined;
+  const rootCandidates = unique([
+    ...deriveCandidateRootDirs(configPath),
+    npmGlobalRoot,
+    npmGlobalRoot ? join(npmGlobalRoot, "openclaw") : undefined,
+    npmGlobalRoot ? join(npmGlobalRoot, "@openclaw", "cli") : undefined,
+    commandPrefix,
+    commandPrefix ? join(commandPrefix, "lib", "node_modules") : undefined,
+    commandPrefix ? join(commandPrefix, "lib", "node_modules", "openclaw") : undefined,
+    commandPrefix ? join(commandPrefix, "lib", "node_modules", "@openclaw", "cli") : undefined,
+  ]);
 
-  for (const rootDir of deriveCandidateRootDirs(configPath)) {
+  for (const rootDir of rootCandidates) {
+    if (statSafeIsFile(rootDir)) {
+      return rootDir;
+    }
+
     for (const relativePath of relativeCandidates) {
       const absolutePath = resolve(rootDir, relativePath);
       if (existsSync(absolutePath) && statSafeIsFile(absolutePath)) {
