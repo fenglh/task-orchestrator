@@ -20,12 +20,10 @@ const config = JSON.parse(await readFile(configPath, 'utf8'));
 const events = [];
 
 const prompt = [
-  'You are running a runtime event probe.',
-  'Use the available tools in this exact order if possible:',
-  '1. Read AGENTS.md from the workspace root.',
-  `2. Write a short markdown file to ${probeOutput}.`,
-  'Keep the written content very short.',
-  'Return a one-line plain-text confirmation at the end.',
+  'Runtime event probe.',
+  `Write a very short markdown file to ${probeOutput}.`,
+  'Then use exec to run exactly: pwd',
+  'Then reply with exactly: probe done',
 ].join('\n');
 
 const result = await runEmbeddedPiAgent({
@@ -51,13 +49,16 @@ const result = await runEmbeddedPiAgent({
   },
 });
 
-const toolEvents = events.filter((event) => event.type === 'tool_execution_start' || event.type === 'tool_execution_end');
+const toolLikeEvents = events.filter((event) => {
+  const record = event;
+  return record?.type === 'tool_execution_start' || record?.type === 'tool_execution_end' || record?.stream === 'tool';
+});
 console.log('RESULT_TEXT_START');
 console.log(result.text ?? '');
 console.log('RESULT_TEXT_END');
 console.log(`EVENT_FILE=${outputPath}`);
 console.log(`TOTAL_EVENTS=${events.length}`);
-console.log(`TOOL_EVENTS=${toolEvents.length}`);
-for (const [index, event] of toolEvents.slice(0, 10).entries()) {
+console.log(`TOOL_EVENTS=${toolLikeEvents.length}`);
+for (const [index, event] of toolLikeEvents.slice(0, 12).entries()) {
   console.log(`TOOL_EVENT_${index + 1}=${JSON.stringify(event)}`);
 }

@@ -70,7 +70,7 @@ function summarizeRuntimeEvidence(events: OpenClawSessionEvent[]): RuntimeEviden
       const command = typeof data.command === "string"
         ? data.command
         : toolName === "exec" && typeof data.meta === "string"
-          ? data.meta
+          ? extractCommandFromMeta(data.meta)
           : undefined;
       if (command) commandLabels.add(command);
     }
@@ -204,6 +204,18 @@ export class EmbeddedPiTaskExecutionAdapter implements TaskExecutionAdapter {
     sessionId: string,
     event: OpenClawSessionEvent,
   ): Promise<void> {
+    if (!this.eventSink) {
+      return;
+    }
+
+    await this.eventSink.onEvent({
+      threadId,
+      sessionId,
+      event,
+    });
+  }
+}
+romise<void> {
     if (!this.eventSink) {
       return;
     }

@@ -31,6 +31,11 @@ function extractPathFromMeta(meta: string): string | undefined {
   return match?.[1]?.trim();
 }
 
+function extractCommandFromMeta(meta: string): string | undefined {
+  const [head] = meta.split(/\s+\(in\s+/i, 1);
+  return head?.trim() || meta.trim() || undefined;
+}
+
 function summarizeRuntimeEvidence(events?: OpenClawPromptResponse["events"]): RuntimeEvidenceSnapshot {
   const toolCalls = new Set<string>();
   const modifiedArtifacts = new Set<string>();

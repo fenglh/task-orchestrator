@@ -9,6 +9,11 @@ function extractPathFromMeta(meta) {
   return match?.[1]?.trim();
 }
 
+function extractCommandFromMeta(meta) {
+  const [head] = meta.split(/\s+\(in\s+/i, 1);
+  return head?.trim() || meta.trim() || undefined;
+}
+
 function summarizeRuntimeEvidence(events) {
   const toolCalls = new Set();
   const modifiedArtifacts = new Set();
@@ -41,7 +46,7 @@ function summarizeRuntimeEvidence(events) {
       const command = typeof data.command === 'string'
         ? data.command
         : toolName === 'exec' && typeof data.meta === 'string'
-          ? data.meta
+          ? extractCommandFromMeta(data.meta)
           : undefined;
       if (command) commandLabels.add(command);
     }
