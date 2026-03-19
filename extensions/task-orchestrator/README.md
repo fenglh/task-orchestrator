@@ -100,7 +100,15 @@ Most common current working `runnerModule` on this machine:
 
 ## Development smoke tests
 
-This repo now includes local smoke tests that validate the main orchestration paths without requiring a real provider:
+This repo now includes local smoke tests that validate the main orchestration paths without requiring a real provider.
+
+Run the full suite:
+
+```bash
+npm run smoke
+```
+
+Run individual scenarios:
 
 ```bash
 node scripts/smoke-task-orchestrator.mjs

@@ -5,6 +5,12 @@
   "type": "module",
   "scripts": {
     "demo": "node src/demo.ts",
-    "install:openclaw-plugin": "node scripts/install.mjs"
+    "install:openclaw-plugin": "node scripts/install.mjs",
+    "smoke": "node scripts/run-smoke-tests.mjs",
+    "smoke:basic": "node scripts/smoke-task-orchestrator.mjs",
+    "smoke:dynamic": "node scripts/smoke-dynamic-orchestration.mjs",
+    "smoke:blocked": "node scripts/smoke-blocked-resume-orchestration.mjs",
+    "smoke:expand-modes": "node scripts/smoke-expand-modes.mjs",
+    "smoke:retry-skip": "node scripts/smoke-retry-skip-orchestration.mjs"
   }
 }
