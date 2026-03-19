@@ -170,6 +170,9 @@ export default function register(api: any): void {
     userId: ctx.senderId,
   });
 
+  const formatCommandError = (error: unknown) =>
+    error instanceof Error ? error.message : String(error);
+
   api.registerGatewayMethod("task-orchestrator.start", async ({ params, respond }: any) => {
     try {
       const handler = await getHandler();
@@ -326,32 +329,39 @@ export default function register(api: any): void {
     acceptsArgs: true,
     requireAuth: false,
     handler: async (ctx: any) => {
-      const handler = await getHandler();
-      const args = (ctx.args ?? "").trim();
+      try {
+        const handler = await getHandler();
+        const args = (ctx.args ?? "").trim();
 
-      if (!args) {
+        if (!args) {
+          return {
+            text: [
+              "Task command help",
+              "/task start <goal>",
+              "/task status",
+              "/task tree",
+              "/task resume",
+              "/task pause",
+              "/task cancel",
+              "/task refine <nodeRef> <instruction>",
+              "/task retry [nodeRef] [instruction]",
+              "/task skip [nodeRef]",
+              "/task list",
+            ].join("\n"),
+          };
+        }
+
+        const result = await handler.handleMessage(
+          buildChannelContext(ctx),
+          `/task ${args}`,
+        );
+        return { text: result.text };
+      } catch (error) {
+        api.logger?.error?.(`[task-orchestrator] /task failed: ${formatCommandError(error)}`);
         return {
-          text: [
-            "Task command help",
-            "/task start <goal>",
-            "/task status",
-            "/task tree",
-            "/task resume",
-            "/task pause",
-            "/task cancel",
-            "/task refine <nodeRef> <instruction>",
-            "/task retry [nodeRef] [instruction]",
-            "/task skip [nodeRef]",
-            "/task list",
-          ].join("\n"),
+          text: `Task command failed: ${formatCommandError(error)}`,
         };
       }
-
-      const result = await handler.handleMessage(
-        buildChannelContext(ctx),
-        `/task ${args}`,
-      );
-      return { text: result.text };
     },
   });
 
@@ -360,21 +370,28 @@ export default function register(api: any): void {
     description: "Show the active task summary for this sender.",
     requireAuth: false,
     handler: async (ctx: any) => {
-      const handler = await getHandler();
-      const orchestrator = handler.getOrchestrator();
-      const channelConversationId = toConversationId(ctx);
-      const channelState = await orchestrator.getChannelState(channelConversationId);
-      if (!channelState?.activeThreadId) {
-        return { text: "No active task." };
+      try {
+        const handler = await getHandler();
+        const orchestrator = handler.getOrchestrator();
+        const channelConversationId = toConversationId(ctx);
+        const channelState = await orchestrator.getChannelState(channelConversationId);
+        if (!channelState?.activeThreadId) {
+          return { text: "No active task." };
+        }
+        const view = await orchestrator.getTaskStatus(channelState.activeThreadId, "summary");
+        return {
+          text: [
+            `Task: ${view.title}`,
+            `Status: ${view.status}`,
+            `Progress: ${view.progress.done}/${view.progress.total}`,
+          ].join("\n"),
+        };
+      } catch (error) {
+        api.logger?.error?.(`[task-orchestrator] /taskstatus failed: ${formatCommandError(error)}`);
+        return {
+          text: `Task status command failed: ${formatCommandError(error)}`,
+        };
       }
-      const view = await orchestrator.getTaskStatus(channelState.activeThreadId, "summary");
-      return {
-        text: [
-          `Task: ${view.title}`,
-          `Status: ${view.status}`,
-          `Progress: ${view.progress.done}/${view.progress.total}`,
-        ].join("\n"),
-      };
     },
   });
 
@@ -384,12 +401,19 @@ export default function register(api: any): void {
     acceptsArgs: true,
     requireAuth: false,
     handler: async (ctx: any) => {
-      const handler = await getHandler();
-      const result = await handler.handleMessage(
-        buildChannelContext(ctx),
-        ctx.args ?? "",
-      );
-      return { text: result.text };
+      try {
+        const handler = await getHandler();
+        const result = await handler.handleMessage(
+          buildChannelContext(ctx),
+          ctx.args ?? "",
+        );
+        return { text: result.text };
+      } catch (error) {
+        api.logger?.error?.(`[task-orchestrator] /taskroute failed: ${formatCommandError(error)}`);
+        return {
+          text: `Task route command failed: ${formatCommandError(error)}`,
+        };
+      }
     },
   });
 
