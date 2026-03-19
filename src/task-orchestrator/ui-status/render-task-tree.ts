@@ -6,13 +6,13 @@ import type {
 function describeEvidenceStatus(status?: string): string {
   switch (status) {
     case "needs_review":
-      return "⚠️ review";
+      return "⚠️ 建议复核";
     case "partial":
-      return "⚠️ partial";
+      return "⚠️ 部分通过";
     case "failed":
-      return "❌ failed-checks";
+      return "❌ 检查失败";
     case "passed":
-      return "✅ checks-pass";
+      return "✅ 检查通过";
     default:
       return status ? `evidence=${status}` : "";
   }
@@ -21,8 +21,8 @@ function describeEvidenceStatus(status?: string): string {
 function renderNode(node: TaskTreeNodeView, indent: string): string[] {
   const evidenceText = describeEvidenceStatus(node.completionEvidenceStatus);
   const evidenceSuffix = evidenceText ? ` {${evidenceText}}` : "";
-  const pathMarker = node.isCurrentNode ? "👉 " : node.isInCurrentPath ? "↳ " : "";
-  const lines = [`${indent}- ${pathMarker}${node.displayPath}. ${node.title} [${node.status}]${evidenceSuffix}`];
+  const marker = node.isCurrentNode ? "👉 " : node.isSuggestedNode ? "⭐ " : node.isInCurrentPath ? "↳ " : "";
+  const lines = [`${indent}- ${marker}${node.displayPath}. ${node.title} [${node.status}]${evidenceSuffix}`];
 
   for (const child of node.children) {
     lines.push(...renderNode(child, `${indent}  `));
@@ -33,23 +33,23 @@ function renderNode(node: TaskTreeNodeView, indent: string): string[] {
 
 export function renderTaskTree(view: TaskTreeView): string {
   const lines = [
-    `Task: ${view.title}`,
-    `Status: ${view.status}`,
+    `任务：${view.title}`,
+    `状态：${view.status}`,
   ];
 
   if (view.currentNodeRef && view.currentNodeTitle) {
-    lines.push(`Current node: ${view.currentNodeRef} ${view.currentNodeTitle}`);
+    lines.push(`当前节点：${view.currentNodeRef} ${view.currentNodeTitle}`);
   }
 
   if (view.currentPath.length > 0) {
-    lines.push(`Current path: ${view.currentPath.join(" > ")}`);
+    lines.push(`当前路径：${view.currentPath.join(" > ")}`);
   }
 
   if (view.suggestedNodeRef && view.suggestedNodeTitle) {
-    lines.push(`Suggested node: ${view.suggestedNodeRef} ${view.suggestedNodeTitle}`);
+    lines.push(`推荐查看节点：${view.suggestedNodeRef} ${view.suggestedNodeTitle}`);
   }
 
-  lines.push("Legend: 👉 current node · ⭐ suggested node · ↳ current path · ⚠️ review · ⚠️ partial · ❌ failed-checks · ✅ checks-pass");
+  lines.push("图例：👉 当前节点 · ⭐ 推荐查看节点 · ↳ 当前路径 · ⚠️ 建议复核 · ⚠️ 部分通过 · ❌ 检查失败 · ✅ 检查通过");
 
   for (const node of view.tree) {
     lines.push(...renderNode(node, ""));

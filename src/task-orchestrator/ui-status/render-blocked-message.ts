@@ -2,7 +2,7 @@ import type { TaskThread } from "../types/task-thread.ts";
 
 export function renderBlockedMessage(thread: TaskThread): string {
   if (!thread.blocked) {
-    return "Task is not waiting for user input.";
+    return "当前任务没有在等待你的输入。";
   }
 
   const lines = [
@@ -24,7 +24,7 @@ export function renderBlockedMessage(thread: TaskThread): string {
 
   lines.push("你也可以：");
   lines.push("- 直接回复缺失输入，系统会继续执行");
-  lines.push("Recommended commands:");
+  lines.push("推荐命令：");
   lines.push("- /task tree");
   lines.push("- /task pause");
   lines.push("- /task cancel");

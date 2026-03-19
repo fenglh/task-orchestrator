@@ -31,7 +31,7 @@ function reviewHint(view: TaskSummaryView): string | undefined {
   }
 
   if (view.reviewStats.partial > 0) {
-    return `有 ${view.reviewStats.partial} 个节点只部分通过自动检查，建议优先查看这些节点的 check 明细。`;
+    return `有 ${view.reviewStats.partial} 个节点只部分通过自动检查，建议优先查看这些节点的检查明细。`;
   }
 
   if (view.reviewStats.failedChecks > 0) {
@@ -75,40 +75,40 @@ function nextStepHint(view: TaskSummaryView): string | undefined {
 
 export function renderTaskSummary(view: TaskSummaryView): string {
   const lines = [
-    `Task: ${view.title}`,
-    `Status: ${view.status} · ${describeStatus(view.status)}`,
-    `Progress: ${view.progress.done}/${view.progress.total}`,
+    `任务：${view.title}`,
+    `状态：${view.status} · ${describeStatus(view.status)}`,
+    `进度：${view.progress.done}/${view.progress.total}`,
   ];
 
   if (view.currentNode) {
-    lines.push(`Current node: ${view.currentNode.displayPath} ${view.currentNode.title}`);
-    lines.push(`Current path focus: 当前主线正在推进节点 ${view.currentNode.displayPath}`);
+    lines.push(`当前节点：${view.currentNode.displayPath} ${view.currentNode.title}`);
+    lines.push(`当前主线焦点：当前主线正在推进节点 ${view.currentNode.displayPath}`);
   }
 
   if (view.reviewStats) {
     lines.push(
-      `Review flags: needs_review=${view.reviewStats.needsReview}, partial=${view.reviewStats.partial}, failed_checks=${view.reviewStats.failedChecks}`,
+      `复核标记：needs_review=${view.reviewStats.needsReview}, partial=${view.reviewStats.partial}, failed_checks=${view.reviewStats.failedChecks}`,
     );
   }
 
   const reviewHintText = reviewHint(view);
   if (reviewHintText) {
-    lines.push(`Review note: ${reviewHintText}`);
+    lines.push(`复核提示：${reviewHintText}`);
   }
 
   if (view.blocked) {
-    lines.push(`Blocked question: ${view.blocked.question}`);
-    lines.push(`Blocked reason: ${view.blocked.whyBlocked}`);
+    lines.push(`卡住问题：${view.blocked.question}`);
+    lines.push(`卡住原因：${view.blocked.whyBlocked}`);
   }
 
   if (view.latestSummary) {
-    lines.push(`Latest update: ${view.latestSummary}`);
+    lines.push(`最新进展：${view.latestSummary}`);
   }
 
   if (view.suggestedNode) {
-    lines.push(`Suggested node: ${view.suggestedNode.displayPath} ${view.suggestedNode.title}`);
-    lines.push(`Suggested action reason: ${view.suggestedNode.reason}`);
-    lines.push("Recommended commands:");
+    lines.push(`推荐查看节点：${view.suggestedNode.displayPath} ${view.suggestedNode.title}`);
+    lines.push(`推荐理由：${view.suggestedNode.reason}`);
+    lines.push("推荐命令：");
     lines.push(`- /task node ${view.suggestedNode.displayPath}`);
   }
 

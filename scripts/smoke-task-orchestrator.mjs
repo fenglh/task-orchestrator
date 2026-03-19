@@ -108,13 +108,13 @@ const summaryText = renderTaskSummary(summaryView);
 const treeText = renderTaskTree(treeView);
 
 const assertions = [
-  ['summary has review flags', summaryText.includes('Review flags:')],
-  ['tree has evidence status', treeText.includes('{evidence=needs_review}')],
-  ['node detail has runtime evidence', nodeText.includes('Runtime evidence:')],
-  ['node detail has tool calls', nodeText.includes('Tool calls observed: write')],
-  ['node detail has modified artifacts', nodeText.includes('Modified artifacts observed: progress/smoke-report.md')],
-  ['node detail has commands', nodeText.includes('Commands observed: write progress/smoke-report.md')],
-  ['node detail has check details', nodeText.includes('Check result details:')],
+  ['summary has review flags', summaryText.includes('复核标记：')],
+  ['tree has evidence status', treeText.includes('{⚠️ 建议复核}')],
+  ['node detail has runtime evidence', nodeText.includes('运行时证据：')],
+  ['node detail has tool calls', nodeText.includes('观察到的工具调用：write')],
+  ['node detail has modified artifacts', nodeText.includes('观察到的产物修改：progress/smoke-report.md')],
+  ['node detail has commands', nodeText.includes('观察到的命令：write progress/smoke-report.md')],
+  ['node detail has check details', nodeText.includes('检查明细：')],
 ];
 
 const failed = assertions.filter(([, ok]) => !ok);

@@ -2,17 +2,17 @@ import type { TaskThread } from "../types/task-thread.ts";
 
 export function renderWaitingHumanHelp(thread: TaskThread): string {
   if (!thread.blocked) {
-    return "Task is not waiting for input.";
+    return "当前任务没有在等待输入。";
   }
 
   return [
-    "The task is waiting for your input.",
-    `Question: ${thread.blocked.question}`,
-    `Reason: ${thread.blocked.whyBlocked}`,
-    "You can:",
-    "- reply directly with the missing input to continue",
-    "- use `/task status` to inspect task status",
-    "- use `/task tree` to inspect the task tree",
-    "- use `/task pause` or `/task cancel` to control the task",
+    "当前任务正在等待你的输入。",
+    `问题：${thread.blocked.question}`,
+    `原因：${thread.blocked.whyBlocked}`,
+    "你现在可以：",
+    "- 直接回复缺失输入，系统会继续执行",
+    "- 使用 `/task status` 查看任务状态",
+    "- 使用 `/task tree` 查看任务树",
+    "- 使用 `/task pause` 或 `/task cancel` 控制任务",
   ].join("\n");
 }
