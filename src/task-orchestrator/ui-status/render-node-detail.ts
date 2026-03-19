@@ -6,30 +6,34 @@ function suggestedActions(view: TaskNodeDetailView): string[] {
 
   if (node.status === "blocked") {
     actions.push("直接回复缺失输入，系统会尝试继续执行这个节点。");
-    actions.push("如果暂时不想继续，可使用 `/task pause` 暂停任务。");
+    actions.push(`命令：\`/task node ${node.displayPath}\` 查看这个节点详情。`);
+    actions.push("命令：`/task pause` 暂停整个任务。");
     return actions;
   }
 
   if (node.status === "failed") {
-    actions.push("优先考虑用 `/task retry` 重试这个失败节点。");
-    actions.push("如果这是低价值节点或外部条件不满足，可考虑 `/task skip`。");
+    actions.push(`命令：\`/task retry ${node.displayPath}\` 重试这个失败节点。`);
+    actions.push(`命令：\`/task skip ${node.displayPath}\` 跳过这个失败节点。`);
     return actions;
   }
 
   if (node.completionEvidence?.status === "needs_review") {
     actions.push("先快速查看本节点的 completion evidence 和 check 明细。");
+    actions.push(`命令：\`/task node ${node.displayPath}\` 重新打开这个节点详情。`);
     actions.push("如果结果可信，可继续沿主线推进；如果不放心，可要求重做或细化。");
     return actions;
   }
 
   if (node.completionEvidence?.status === "partial") {
     actions.push("优先查看未通过的 check 明细，判断是结果缺失还是规则过严。");
+    actions.push(`命令：\`/task node ${node.displayPath}\` 查看失败项明细。`);
     actions.push("必要时可要求重做该节点或补充子任务。");
     return actions;
   }
 
   if (node.status === "done") {
     actions.push("如果这是关键节点，建议快速浏览证据后再继续看下一个节点。");
+    actions.push("命令：`/task tree` 回到任务树总览。");
   }
 
   return actions;
