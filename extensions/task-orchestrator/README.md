@@ -74,9 +74,35 @@ Example shape:
 }
 ```
 
+## Smoke test
+
+After install / restart, run this minimal check in chat:
+
+1. `/task`
+   - should return command help
+2. `/task start 帮我做一个简单的测试任务，自动拆解并执行`
+   - should create a thread instead of throwing a runner / workspace error
+3. `/task status`
+   - should show an active task summary
+4. `/task tree`
+   - should show the current task tree
+
+If it fails, inspect these values first:
+
+- `workspaceDir`
+- `storageDir`
+- `sessionDir`
+- `runnerModule`
+
+Most common current working `runnerModule` on this machine:
+
+- `/opt/homebrew/lib/node_modules/openclaw/dist/extensionAPI.js`
+
 ## Development note
 
 The plugin runtime currently loads `runEmbeddedPiAgent()` via dynamic import because the public plugin SDK docs do not expose a dedicated embedded-pi runner helper for third-party plugins.
+
+Conversation state is keyed with a composite conversation id built from provider/channel/chatId/threadId/senderId when available, to reduce cross-surface collisions.
 
 ## Helper installer
 

@@ -116,6 +116,14 @@ function resolveStateRootDir(api: any): string {
   return join(hostRootDir, ".openclaw");
 }
 
+function logDebug(api: any, message: string): void {
+  api.logger?.debug?.(`[task-orchestrator] ${message}`);
+}
+
+function logWarn(api: any, message: string): void {
+  api.logger?.warn?.(`[task-orchestrator] ${message}`);
+}
+
 function buildRunnerModuleCandidates(api: any, pluginConfig: Record<string, unknown>): string[] {
   const relativeRunnerCandidates = [
     "dist/extensionAPI.js",
@@ -169,24 +177,32 @@ async function createHandler(api: any): Promise<OpenClawWebChatTaskHandler> {
   const sessionDir =
     (pluginConfig.sessionDir as string | undefined) ??
     join(stateDir, "pi-sessions");
+  const workspaceDir = resolveWorkspaceDir(api, pluginConfig);
+  const runnerCandidates = buildRunnerModuleCandidates(api, pluginConfig);
+  logDebug(
+    api,
+    `initializing handler workspaceDir=${workspaceDir} stateDir=${stateDir} sessionDir=${sessionDir}`,
+  );
+  logDebug(api, `runner candidates: ${runnerCandidates.join(", ")}`);
   const runner = await createRunnerFromModule({
     runnerModule: pluginConfig.runnerModule as string | undefined,
     runnerExport: pluginConfig.runnerExport as string | undefined,
     baseDir: resolveHostRootDir(api),
-    candidateModules: buildRunnerModuleCandidates(api, pluginConfig),
+    candidateModules: runnerCandidates,
   });
 
   return new OpenClawWebChatTaskHandler({
     runner,
     storageDir: stateDir,
     sessionDir,
-    workspaceDir: resolveWorkspaceDir(api, pluginConfig),
+    workspaceDir,
     provider: pluginConfig.provider as string | undefined,
     model: pluginConfig.model as string | undefined,
     timeoutMs: pluginConfig.timeoutMs as number | undefined,
     previewPlanByDefault: pluginConfig.previewPlanByDefault as boolean | undefined,
     fallbackChatHandler: async (channelContext, message) => {
       if (typeof api.callGatewayMethod !== "function") {
+        logWarn(api, "api.callGatewayMethod is unavailable; returning original message from fallbackChatHandler");
         return message;
       }
 
@@ -218,6 +234,7 @@ async function createHandler(api: any): Promise<OpenClawWebChatTaskHandler> {
         }
       }
 
+      logWarn(api, "all fallback gateway methods failed; returning original message");
       return message;
     },
     taskEventHandler: async (channelContext, payload) => {
