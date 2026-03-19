@@ -7,6 +7,7 @@ const scripts = [
   'smoke-expand-modes.mjs',
   'smoke-retry-skip-orchestration.mjs',
   'smoke-retry-twice-orchestration.mjs',
+  'smoke-recent-thread-fallback.mjs',
 ];
 
 function runScript(script) {
