@@ -25,6 +25,7 @@ export interface RefineNodeInput {
 }
 
 export interface TaskExecutionAdapter {
+  workspaceDir?: string;
   planRoot(input: PlanRootInput): Promise<TaskDraft[]>;
   executeNode(input: ExecuteNodeInput): Promise<TaskResult>;
   finalize(input: FinalizeInput): Promise<{ summary: string }>;

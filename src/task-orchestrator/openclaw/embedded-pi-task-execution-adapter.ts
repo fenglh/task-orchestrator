@@ -40,7 +40,7 @@ export interface EmbeddedPiTaskExecutionAdapterOptions {
 export class EmbeddedPiTaskExecutionAdapter implements TaskExecutionAdapter {
   private readonly runner: OpenClawEmbeddedPiRunner;
   private readonly sessionDir: string;
-  private readonly workspaceDir: string;
+  readonly workspaceDir: string;
   private readonly config?: unknown;
   private readonly provider?: string;
   private readonly model?: string;

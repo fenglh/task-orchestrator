@@ -31,6 +31,7 @@ export interface OpenClawTaskExecutionAdapterOptions {
 }
 
 export class OpenClawTaskExecutionAdapter implements TaskExecutionAdapter {
+  readonly workspaceDir?: string;
   private readonly runtime: OpenClawRuntime;
   private readonly eventSink?: OpenClawEventSink;
 
