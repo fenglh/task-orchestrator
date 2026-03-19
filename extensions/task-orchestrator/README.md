@@ -131,6 +131,43 @@ What they cover:
   - `replace` vs `suspend` semantics
 - `smoke-retry-skip-orchestration.mjs`
   - failed node → retry / skip → continue / finalize
+- `smoke-retry-twice-orchestration.mjs`
+  - failed → retry → failed → retry → success
+
+## Runtime event debugging
+
+When smoke tests pass but real runtime behavior looks different, capture real EmbeddedPi session events and inspect the normalized runtime evidence.
+
+Capture a sample:
+
+```bash
+node scripts/capture-runtime-events.mjs
+```
+
+Inspect the raw JSONL sample file:
+
+```bash
+sed -n '1,80p' debug/runtime-events-sample.jsonl
+```
+
+Check how the current summarizer interprets the sample:
+
+```bash
+node scripts/check-runtime-evidence-from-sample.mjs
+```
+
+Current expectation from real samples gathered on this machine:
+
+- tool events may arrive as `stream="tool"` instead of `type="tool_execution_*"`
+- tool name may live in `data.name`
+- file path may be embedded in `data.meta`
+- exec command text may also be embedded in `data.meta`
+
+Debug artifact conventions:
+
+- `debug/` → short-lived sample outputs and probe files
+- `.tmp/` → ephemeral session scratch files
+- both are gitignored by default
 
 ## Development note
 
@@ -161,4 +198,3 @@ It will:
 - try to auto-discover `runnerModule`
 - optionally run `openclaw plugins install -l <pluginRoot>`
 - restart the Gateway via `openclaw gateway restart`
-t the Gateway via `openclaw gateway restart`
