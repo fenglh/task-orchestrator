@@ -37,12 +37,15 @@ The plugin manifest no longer requires explicit paths in the happy path.
 
 `runnerModule` is also optional. If omitted, the plugin will try these locations relative to the host root directory:
 
+- `./dist/extensionAPI.js` (recommended for current OpenClaw builds)
 - `./dist/agents/pi-embedded-runner.js`
 - `./agents/pi-embedded-runner.js`
 - `./src/agents/pi-embedded-runner.js`
 - `./src/agents/pi-embedded-runner.ts`
 
-If your OpenClaw project exports `runEmbeddedPiAgent()` from a different location, set `runnerModule` explicitly.
+If your OpenClaw project exports `runEmbeddedPiAgent()` from a different location, set `runnerModule` explicitly. For the OpenClaw version installed on this machine, the working value is:
+
+- `/opt/homebrew/lib/node_modules/openclaw/dist/extensionAPI.js`
 
 If `fallbackGatewayMethod` is omitted, the plugin will try the official core gateway method `chat.send` first.
 
@@ -54,14 +57,17 @@ Example shape:
     "entries": {
       "task-orchestrator": {
         "enabled": true,
-        "storageDir": "/srv/openclaw/state/task-orchestrator",
-        "sessionDir": "/srv/openclaw/state/task-orchestrator/pi-sessions",
-        "runnerExport": "runEmbeddedPiAgent",
-        "provider": "anthropic",
-        "model": "claude-sonnet-4-20250514",
-        "timeoutMs": 120000,
-        "fallbackGatewayMethod": "chat.send",
-        "progressGatewayMethod": "chat.push"
+        "config": {
+          "storageDir": "/srv/openclaw/state/task-orchestrator",
+          "sessionDir": "/srv/openclaw/state/task-orchestrator/pi-sessions",
+          "runnerModule": "/opt/homebrew/lib/node_modules/openclaw/dist/extensionAPI.js",
+          "runnerExport": "runEmbeddedPiAgent",
+          "provider": "anthropic",
+          "model": "claude-sonnet-4-20250514",
+          "timeoutMs": 120000,
+          "fallbackGatewayMethod": "chat.send",
+          "progressGatewayMethod": "chat.push"
+        }
       }
     }
   }

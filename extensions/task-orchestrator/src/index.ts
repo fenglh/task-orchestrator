@@ -21,7 +21,12 @@ function resolvePluginConfig(api: any): Record<string, unknown> {
     return api.getPluginConfig("task-orchestrator") ?? {};
   }
 
-  return api.config?.plugins?.entries?.["task-orchestrator"] ?? {};
+  const entry = api.config?.plugins?.entries?.["task-orchestrator"];
+  if (entry?.config && typeof entry.config === "object") {
+    return entry.config;
+  }
+
+  return entry ?? {};
 }
 
 function statSafeIsFile(filePath: string): boolean {
@@ -101,6 +106,16 @@ function resolveHostRootDir(api: any): string {
   return process.cwd();
 }
 
+function resolveStateRootDir(api: any): string {
+  const configuredStateDir = api.config?.stateDir;
+  if (typeof configuredStateDir === "string" && configuredStateDir.trim()) {
+    return configuredStateDir;
+  }
+
+  const hostRootDir = resolveHostRootDir(api);
+  return join(hostRootDir, ".openclaw");
+}
+
 function buildRunnerModuleCandidates(api: any, pluginConfig: Record<string, unknown>): string[] {
   const relativeRunnerCandidates = [
     "dist/extensionAPI.js",
@@ -150,7 +165,7 @@ async function createHandler(api: any): Promise<OpenClawWebChatTaskHandler> {
   const pluginConfig = resolvePluginConfig(api);
   const stateDir =
     (pluginConfig.storageDir as string | undefined) ??
-    join(api.config?.stateDir ?? ".openclaw", "task-orchestrator");
+    join(resolveStateRootDir(api), "task-orchestrator");
   const sessionDir =
     (pluginConfig.sessionDir as string | undefined) ??
     join(stateDir, "pi-sessions");
