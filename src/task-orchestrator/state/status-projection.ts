@@ -21,7 +21,21 @@ function projectTreeNode(thread: TaskThread, nodeId: string): TaskTreeNodeView {
     displayPath: node.displayPath,
     title: node.title,
     status: node.status,
+    completionEvidenceStatus: node.completionEvidence?.status,
     children: node.children.map((childId) => projectTreeNode(thread, childId)),
+  };
+}
+
+function collectReviewStats(thread: TaskThread): {
+  needsReview: number;
+  partial: number;
+  failedChecks: number;
+} {
+  const nodes = Object.values(thread.nodes);
+  return {
+    needsReview: nodes.filter((node) => node.completionEvidence?.status === "needs_review").length,
+    partial: nodes.filter((node) => node.completionEvidence?.status === "partial").length,
+    failedChecks: nodes.filter((node) => node.completionEvidence?.status === "failed").length,
   };
 }
 
