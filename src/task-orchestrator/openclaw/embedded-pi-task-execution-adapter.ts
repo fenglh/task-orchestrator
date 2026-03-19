@@ -27,29 +27,51 @@ interface FinalizePayload {
   summary: string;
 }
 
+function extractPathFromMeta(meta: string): string | undefined {
+  const match = meta.match(/(?:from|to)\s+([^()]+?)(?:\s*\(|$)/i);
+  return match?.[1]?.trim();
+}
+
 function summarizeRuntimeEvidence(events: OpenClawSessionEvent[]): RuntimeEvidenceSnapshot {
   const toolCalls = new Set<string>();
   const modifiedArtifacts = new Set<string>();
   const commandLabels = new Set<string>();
 
   for (const event of events) {
-    if (event.type === "tool_execution_start" || event.type === "tool_execution_end") {
-      const payload = (event.payload ?? {}) as Record<string, unknown>;
-      const toolName = typeof payload.tool === "string"
-        ? payload.tool
-        : typeof payload.toolName === "string"
-          ? payload.toolName
+    const record = event as Record<string, unknown>;
+    const data = (record.data ?? event.payload ?? {}) as Record<string, unknown>;
+    const stream = typeof record.stream === "string" ? record.stream : undefined;
+    const eventType = typeof event.type === "string" ? event.type : undefined;
+
+    const toolName = typeof data.name === "string"
+      ? data.name
+      : typeof data.tool === "string"
+        ? data.tool
+        : typeof data.toolName === "string"
+          ? data.toolName
           : undefined;
+
+    if (
+      stream === "tool" ||
+      eventType === "tool_execution_start" ||
+      eventType === "tool_execution_end"
+    ) {
       if (toolName) toolCalls.add(toolName);
 
-      const path = typeof payload.path === "string"
-        ? payload.path
-        : typeof payload.file_path === "string"
-          ? payload.file_path
-          : undefined;
+      const path = typeof data.path === "string"
+        ? data.path
+        : typeof data.file_path === "string"
+          ? data.file_path
+          : typeof data.meta === "string"
+            ? extractPathFromMeta(data.meta)
+            : undefined;
       if (path) modifiedArtifacts.add(path);
 
-      const command = typeof payload.command === "string" ? payload.command : undefined;
+      const command = typeof data.command === "string"
+        ? data.command
+        : toolName === "exec" && typeof data.meta === "string"
+          ? data.meta
+          : undefined;
       if (command) commandLabels.add(command);
     }
   }
