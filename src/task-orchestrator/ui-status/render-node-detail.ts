@@ -1,42 +1,44 @@
 import type { TaskNodeDetailView } from "../types/task-status-view.ts";
 
-function suggestedActions(view: TaskNodeDetailView): string[] {
-  const actions: string[] = [];
+function suggestedActions(view: TaskNodeDetailView): { notes: string[]; commands: string[] } {
+  const notes: string[] = [];
+  const commands: string[] = [];
   const node = view.node;
 
   if (node.status === "blocked") {
-    actions.push("直接回复缺失输入，系统会尝试继续执行这个节点。");
-    actions.push(`命令：\`/task node ${node.displayPath}\` 查看这个节点详情。`);
-    actions.push("命令：`/task pause` 暂停整个任务。");
-    return actions;
+    notes.push("直接回复缺失输入，系统会尝试继续执行这个节点。");
+    commands.push(`/task node ${node.displayPath}`);
+    commands.push("/task pause");
+    return { notes, commands };
   }
 
   if (node.status === "failed") {
-    actions.push(`命令：\`/task retry ${node.displayPath}\` 重试这个失败节点。`);
-    actions.push(`命令：\`/task skip ${node.displayPath}\` 跳过这个失败节点。`);
-    return actions;
+    notes.push("优先考虑重试这个失败节点；如果价值较低，也可以跳过。");
+    commands.push(`/task retry ${node.displayPath}`);
+    commands.push(`/task skip ${node.displayPath}`);
+    return { notes, commands };
   }
 
   if (node.completionEvidence?.status === "needs_review") {
-    actions.push("先快速查看本节点的 completion evidence 和 check 明细。");
-    actions.push(`命令：\`/task node ${node.displayPath}\` 重新打开这个节点详情。`);
-    actions.push("如果结果可信，可继续沿主线推进；如果不放心，可要求重做或细化。");
-    return actions;
+    notes.push("先快速查看本节点的 completion evidence 和 check 明细。");
+    notes.push("如果结果可信，可继续沿主线推进；如果不放心，可要求重做或细化。");
+    commands.push(`/task node ${node.displayPath}`);
+    return { notes, commands };
   }
 
   if (node.completionEvidence?.status === "partial") {
-    actions.push("优先查看未通过的 check 明细，判断是结果缺失还是规则过严。");
-    actions.push(`命令：\`/task node ${node.displayPath}\` 查看失败项明细。`);
-    actions.push("必要时可要求重做该节点或补充子任务。");
-    return actions;
+    notes.push("优先查看未通过的 check 明细，判断是结果缺失还是规则过严。");
+    notes.push("必要时可要求重做该节点或补充子任务。");
+    commands.push(`/task node ${node.displayPath}`);
+    return { notes, commands };
   }
 
   if (node.status === "done") {
-    actions.push("如果这是关键节点，建议快速浏览证据后再继续看下一个节点。");
-    actions.push("命令：`/task tree` 回到任务树总览。");
+    notes.push("如果这是关键节点，建议快速浏览证据后再继续看下一个节点。");
+    commands.push("/task tree");
   }
 
-  return actions;
+  return { notes, commands };
 }
 
 export function renderNodeDetail(view: TaskNodeDetailView): string {
@@ -109,10 +111,17 @@ export function renderNodeDetail(view: TaskNodeDetailView): string {
   }
 
   const actions = suggestedActions(view);
-  if (actions.length > 0) {
+  if (actions.notes.length > 0) {
     lines.push("Suggested actions:");
-    for (const action of actions) {
+    for (const action of actions.notes) {
       lines.push(`- ${action}`);
+    }
+  }
+
+  if (actions.commands.length > 0) {
+    lines.push("Recommended commands:");
+    for (const command of actions.commands) {
+      lines.push(`- ${command}`);
     }
   }
 

@@ -108,7 +108,8 @@ export function renderTaskSummary(view: TaskSummaryView): string {
   if (view.suggestedNode) {
     lines.push(`Suggested node: ${view.suggestedNode.displayPath} ${view.suggestedNode.title}`);
     lines.push(`Suggested action reason: ${view.suggestedNode.reason}`);
-    lines.push(`Suggested inspect command: /task node ${view.suggestedNode.displayPath}`);
+    lines.push("Recommended commands:");
+    lines.push(`- /task node ${view.suggestedNode.displayPath}`);
   }
 
   const outcomeHint = finishedOutcomeHint(view);

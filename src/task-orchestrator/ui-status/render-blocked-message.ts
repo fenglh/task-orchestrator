@@ -24,9 +24,10 @@ export function renderBlockedMessage(thread: TaskThread): string {
 
   lines.push("你也可以：");
   lines.push("- 直接回复缺失输入，系统会继续执行");
-  lines.push("- 使用 `/task tree` 查看当前任务树");
-  lines.push("- 使用 `/task pause` 暂停任务");
-  lines.push("- 使用 `/task cancel` 取消任务");
+  lines.push("Recommended commands:");
+  lines.push("- /task tree");
+  lines.push("- /task pause");
+  lines.push("- /task cancel");
 
   return lines.join("\n");
 }
