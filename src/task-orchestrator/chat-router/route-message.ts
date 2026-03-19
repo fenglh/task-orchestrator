@@ -137,30 +137,30 @@ export async function routeMessage(
         return {
           mode: "chat",
           text:
-            "Updated the pending task draft. Reply with `确认开始任务` to launch it, or `取消待启动任务` to discard it.",
+            "已更新待启动任务草稿。回复 `确认开始任务` 即可启动，回复 `取消待启动任务` 可放弃。",
         };
       }
       case "discard": {
         await orchestrator.clearPendingTask(input.channelContext);
         return {
           mode: "chat",
-          text: "Discarded the pending task draft.",
+          text: "已丢弃待启动任务草稿。",
         };
       }
       case "refine": {
         if (!activeThreadId) {
-          return { mode: "chat", text: "No active task." };
+          return { mode: "chat", text: "当前没有进行中的任务。" };
         }
         const thread = await orchestrator.refineTaskNode(
           activeThreadId,
-          command.instruction || "Refine this task into smaller executable child tasks.",
+          command.instruction || "请把这个节点细化成更小、可执行的子任务。",
           command.nodeRef,
         );
         const tree = await orchestrator.getTaskStatus(thread.threadId, "tree");
         return {
           mode: "task",
           text: [
-            "Task node refined. Review the updated tree and use `/task resume` to continue.",
+            "已细化该节点。先查看更新后的任务树，再使用 `/task resume` 继续执行。",
             "",
             renderTaskTree(tree),
           ].join("\n"),
@@ -169,7 +169,7 @@ export async function routeMessage(
       }
       case "retry": {
         if (!activeThreadId) {
-          return { mode: "chat", text: "No active task." };
+          return { mode: "chat", text: "当前没有进行中的任务。" };
         }
         const thread = await orchestrator.retryTaskNode(
           activeThreadId,
@@ -181,7 +181,7 @@ export async function routeMessage(
       }
       case "skip": {
         if (!activeThreadId) {
-          return { mode: "chat", text: "No active task." };
+          return { mode: "chat", text: "当前没有进行中的任务。" };
         }
         const thread = await orchestrator.skipTaskNode(
           activeThreadId,
@@ -192,14 +192,14 @@ export async function routeMessage(
       }
       case "pause": {
         if (!activeThreadId) {
-          return { mode: "chat", text: "No active task." };
+          return { mode: "chat", text: "当前没有进行中的任务。" };
         }
         const thread = await orchestrator.pauseTask(activeThreadId);
         return { mode: "task", text: renderTaskSummary(await orchestrator.getTaskStatus(thread.threadId, "summary")), threadId: activeThreadId };
       }
       case "resume": {
         if (!activeThreadId) {
-          return { mode: "chat", text: "No active task." };
+          return { mode: "chat", text: "当前没有进行中的任务。" };
         }
         const thread = await orchestrator.resumeTask(activeThreadId, command.payload);
         return {
@@ -210,7 +210,7 @@ export async function routeMessage(
       }
       case "finish": {
         if (!activeThreadId) {
-          return { mode: "chat", text: "No active task." };
+          return { mode: "chat", text: "当前没有进行中的任务。" };
         }
         const thread = await orchestrator.confirmTaskFinish(activeThreadId);
         return {
@@ -221,7 +221,7 @@ export async function routeMessage(
       }
       case "cancel": {
         if (!activeThreadId) {
-          return { mode: "chat", text: "No active task." };
+          return { mode: "chat", text: "当前没有进行中的任务。" };
         }
         const thread = await orchestrator.cancelTask(activeThreadId);
         const view = await orchestrator.getTaskStatus(thread.threadId, "summary");
@@ -232,12 +232,12 @@ export async function routeMessage(
           input.channelContext.channelConversationId,
         );
         if (threads.length === 0) {
-          return { mode: "chat", text: "No tasks in this conversation." };
+          return { mode: "chat", text: "当前会话里还没有任务。" };
         }
         return {
           mode: "task",
           text: threads
-            .map((thread) => `${thread.threadId} ${thread.title} [${thread.status}]`)
+            .map((thread) => renderThreadListLine(thread))
             .join("\n"),
         };
       }
@@ -265,7 +265,7 @@ export async function routeMessage(
       await orchestrator.clearPendingTask(input.channelContext);
       return {
         mode: "chat",
-        text: "Discarded the pending task draft.",
+        text: "已丢弃待启动任务草稿。",
       };
     }
 
@@ -277,7 +277,7 @@ export async function routeMessage(
       return {
         mode: "chat",
         text:
-          "Updated the pending task draft. Reply with `确认开始任务` to launch it, or `取消待启动任务` to discard it.",
+          "已更新待启动任务草稿。回复 `确认开始任务` 即可启动，回复 `取消待启动任务` 可放弃。",
       };
     }
 
@@ -286,7 +286,7 @@ export async function routeMessage(
       return {
         mode: "chat",
         text:
-          "Replaced the pending task draft. Reply with `确认开始任务` to launch it, or `取消待启动任务` to discard it.",
+          "已替换待启动任务草稿。回复 `确认开始任务` 即可启动，回复 `取消待启动任务` 可放弃。",
       };
     }
   }
@@ -398,14 +398,14 @@ export async function routeMessage(
       return {
         mode: "chat",
         text:
-          "This looks like a complex task. Reply with `确认开始任务` or `/task start ...` to launch task mode.",
+          "这看起来是一个复杂任务。回复 `确认开始任务`，或直接使用 `/task start ...` 进入任务模式。",
       };
     }
     case "confirm_start": {
       if (!channelState?.pendingTaskInput) {
         return {
           mode: "chat",
-          text: "No pending task to confirm.",
+          text: "当前没有待确认启动的任务。",
         };
       }
       const thread = await orchestrator.startTask(
@@ -420,7 +420,7 @@ export async function routeMessage(
     }
     case "refine": {
       if (!activeThreadId) {
-        return { mode: "chat", text: "No active task." };
+        return { mode: "chat", text: "当前没有进行中的任务。" };
       }
       const thread = await orchestrator.refineTaskNode(
         activeThreadId,
@@ -431,7 +431,7 @@ export async function routeMessage(
       return {
         mode: "task",
         text: [
-          "Task node refined. Review the updated tree and use `/task resume` to continue.",
+          "已细化该节点。先查看更新后的任务树，再使用 `/task resume` 继续执行。",
           "",
           renderTaskTree(tree),
         ].join("\n"),
@@ -440,7 +440,7 @@ export async function routeMessage(
     }
     case "retry": {
       if (!activeThreadId) {
-        return { mode: "chat", text: "No active task." };
+        return { mode: "chat", text: "当前没有进行中的任务。" };
       }
       const thread = await orchestrator.retryTaskNode(
         activeThreadId,
@@ -455,7 +455,7 @@ export async function routeMessage(
     }
     case "skip": {
       if (!activeThreadId) {
-        return { mode: "chat", text: "No active task." };
+        return { mode: "chat", text: "当前没有进行中的任务。" };
       }
       const thread = await orchestrator.skipTaskNode(activeThreadId, intent.nodeRef);
       return {
@@ -498,7 +498,7 @@ export async function routeMessage(
     }
     case "pause": {
       if (!activeThreadId) {
-        return { mode: "chat", text: "No active task." };
+        return { mode: "chat", text: "当前没有进行中的任务。" };
       }
       const thread = await orchestrator.pauseTask(activeThreadId);
       return {
@@ -509,7 +509,7 @@ export async function routeMessage(
     }
     case "resume": {
       if (!activeThreadId) {
-        return { mode: "chat", text: "No active task." };
+        return { mode: "chat", text: "当前没有进行中的任务。" };
       }
       const thread = await orchestrator.resumeTask(activeThreadId);
       return {
@@ -520,7 +520,7 @@ export async function routeMessage(
     }
     case "confirm_finish": {
       if (!activeThreadId) {
-        return { mode: "chat", text: "No active task." };
+        return { mode: "chat", text: "当前没有进行中的任务。" };
       }
       const thread = await orchestrator.confirmTaskFinish(activeThreadId);
       return {
@@ -531,7 +531,7 @@ export async function routeMessage(
     }
     case "cancel": {
       if (!activeThreadId) {
-        return { mode: "chat", text: "No active task." };
+        return { mode: "chat", text: "当前没有进行中的任务。" };
       }
       const thread = await orchestrator.cancelTask(activeThreadId);
       return {
