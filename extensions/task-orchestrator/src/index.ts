@@ -162,6 +162,12 @@ export default function register(api: any): void {
     return handlerPromise;
   };
 
+  const buildChannelContext = (ctx: any) => ({
+    channelConversationId: toConversationId(ctx),
+    channelName: ctx.channel,
+    userId: ctx.senderId,
+  });
+
   api.registerGatewayMethod("task-orchestrator.start", async ({ params, respond }: any) => {
     try {
       const handler = await getHandler();
@@ -313,6 +319,41 @@ export default function register(api: any): void {
   });
 
   api.registerCommand({
+    name: "task",
+    description: "Control the task orchestrator. Example: /task start <goal>, /task status, /task tree, /task resume.",
+    acceptsArgs: true,
+    requireAuth: false,
+    handler: async (ctx: any) => {
+      const handler = await getHandler();
+      const args = (ctx.args ?? "").trim();
+
+      if (!args) {
+        return {
+          text: [
+            "Task command help",
+            "/task start <goal>",
+            "/task status",
+            "/task tree",
+            "/task resume",
+            "/task pause",
+            "/task cancel",
+            "/task refine <nodeRef> <instruction>",
+            "/task retry [nodeRef] [instruction]",
+            "/task skip [nodeRef]",
+            "/task list",
+          ].join("\n"),
+        };
+      }
+
+      const result = await handler.handleMessage(
+        buildChannelContext(ctx),
+        `/task ${args}`,
+      );
+      return { text: result.text };
+    },
+  });
+
+  api.registerCommand({
     name: "taskstatus",
     description: "Show the active task summary for this sender.",
     requireAuth: false,
@@ -343,11 +384,7 @@ export default function register(api: any): void {
     handler: async (ctx: any) => {
       const handler = await getHandler();
       const result = await handler.handleMessage(
-        {
-          channelConversationId: toConversationId(ctx),
-          channelName: ctx.channel,
-          userId: ctx.senderId,
-        },
+        buildChannelContext(ctx),
         ctx.args ?? "",
       );
       return { text: result.text };

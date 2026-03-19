@@ -18,8 +18,16 @@ This plugin exposes the orchestrator through:
   - `task-orchestrator.route`
   - `task-orchestrator.recover`
 - Slash commands:
+  - `/task <subcommand>`
   - `/taskstatus`
   - `/taskroute <message>`
+
+The recommended chat-window entrypoint is now `/task ...`, for example:
+
+- `/task start 帮我做京东洗地机竞品分析，自动拆解并执行`
+- `/task status`
+- `/task tree`
+- `/task resume`
 
 ## Required config
 
