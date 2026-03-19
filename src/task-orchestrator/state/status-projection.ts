@@ -63,6 +63,43 @@ function collectOutcomeStats(thread: TaskThread): {
   };
 }
 
+function pickSuggestedNode(thread: TaskThread): {
+  displayPath: string;
+  title: string;
+  reason: string;
+} | undefined {
+  const nodes = Object.values(thread.nodes).filter((node) => node.displayPath !== "0");
+
+  const blockedNode = nodes.find((node) => node.status === "blocked");
+  if (blockedNode) {
+    return {
+      displayPath: blockedNode.displayPath,
+      title: blockedNode.title,
+      reason: "这是当前阻塞节点，优先补输入或查看详情。",
+    };
+  }
+
+  const failedNode = nodes.find((node) => node.status === "failed");
+  if (failedNode) {
+    return {
+      displayPath: failedNode.displayPath,
+      title: failedNode.title,
+      reason: "这是当前失败节点，优先决定 retry 还是 skip。",
+    };
+  }
+
+  const reviewNode = nodes.find((node) => node.completionEvidence?.status === "needs_review");
+  if (reviewNode) {
+    return {
+      displayPath: reviewNode.displayPath,
+      title: reviewNode.title,
+      reason: "这个节点建议人工复核，适合作为任务结束后的第一查看点。",
+    };
+  }
+
+  return undefined;
+}
+
 export function projectSummaryView(thread: TaskThread): TaskSummaryView {
   const currentNode = thread.activeNodeId ? thread.nodes[thread.activeNodeId] : undefined;
 
@@ -78,6 +115,7 @@ export function projectSummaryView(thread: TaskThread): TaskSummaryView {
           title: currentNode.title,
         }
       : undefined,
+    suggestedNode: pickSuggestedNode(thread),
     progress: countTaskProgress(thread),
     reviewStats: collectReviewStats(thread),
     outcomeStats: collectOutcomeStats(thread),

@@ -105,6 +105,11 @@ export function renderTaskSummary(view: TaskSummaryView): string {
     lines.push(`Latest update: ${view.latestSummary}`);
   }
 
+  if (view.suggestedNode) {
+    lines.push(`Suggested node: ${view.suggestedNode.displayPath} ${view.suggestedNode.title}`);
+    lines.push(`Suggested action reason: ${view.suggestedNode.reason}`);
+  }
+
   const outcomeHint = finishedOutcomeHint(view);
   if (outcomeHint) {
     lines.push(outcomeHint);

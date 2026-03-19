@@ -33,6 +33,11 @@ export interface TaskSummaryView {
     displayPath: string;
     title: string;
   };
+  suggestedNode?: {
+    displayPath: string;
+    title: string;
+    reason: string;
+  };
   progress: TaskProgressView;
   blocked?: {
     question: string;
