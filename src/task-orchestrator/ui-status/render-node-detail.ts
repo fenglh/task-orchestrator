@@ -35,6 +35,7 @@ export function renderNodeDetail(view: TaskNodeDetailView): string {
     lines.push("Completion evidence:");
     lines.push(`- Status: ${view.node.completionEvidence.status}`);
     lines.push(`- Verifier summary: ${view.node.completionEvidence.verifierSummary}`);
+    lines.push("- Note: verifier 只校验可观察证据与基本交付形式，不对复杂动态任务结论做最终裁定");
     if (view.node.completionEvidence.checkResults.length > 0) {
       lines.push(`- Check results: ${view.node.completionEvidence.checkResults.length}`);
     }

@@ -173,10 +173,26 @@ export async function verifyNodeCompletion(
 
   if (!contract?.acceptanceChecks?.length) {
     if (fallbackEvidence) {
-      return fallbackEvidence;
+      return {
+        ...fallbackEvidence,
+        verifierSummary:
+          fallbackEvidence.verifierSummary ||
+          "未运行系统级自动校验；当前结果主要依赖节点自报证据，建议按任务复杂度决定是否人工复核",
+      };
     }
 
-    return undefined;
+    return {
+      status: "needs_review",
+      outputs: (input.result.artifacts ?? []).map((path) => ({
+        type: "artifact",
+        path,
+      })),
+      checkResults: [],
+      verifierSummary:
+        "节点未提供可执行的 acceptanceChecks；系统无法对复杂动态任务做固定规则验真，建议人工复核",
+      reviewMode: input.node.completionContract?.reviewMode ?? "needs_review",
+      generatedAt: input.now,
+    };
   }
 
   const checkResults = await Promise.all(
@@ -206,10 +222,10 @@ export async function verifyNodeCompletion(
     checkResults,
     verifierSummary:
       failedCount > 0
-        ? `共 ${failedCount} 项检查失败，${passedCount} 项通过`
+        ? `共 ${failedCount} 项检查失败，${passedCount} 项通过；这只反映可观察证据层，不代表复杂任务质量已被最终裁定`
         : contract.reviewMode === "needs_review"
-          ? "自动检查已通过，但该节点仍建议人工复核"
-          : `共 ${passedCount} 项检查通过`,
+          ? "自动检查已通过，但该节点仍建议人工复核；当前 verifier 只覆盖可观察证据层"
+          : `共 ${passedCount} 项检查通过；当前 verifier 仅验证可观察证据与基本交付形式`,
     reviewMode: contract.reviewMode,
     generatedAt: input.now,
   };
