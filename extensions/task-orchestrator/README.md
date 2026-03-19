@@ -116,6 +116,7 @@ node scripts/smoke-dynamic-orchestration.mjs
 node scripts/smoke-blocked-resume-orchestration.mjs
 node scripts/smoke-expand-modes.mjs
 node scripts/smoke-retry-skip-orchestration.mjs
+node scripts/smoke-retry-twice-orchestration.mjs
 ```
 
 What they cover:
@@ -160,3 +161,4 @@ It will:
 - try to auto-discover `runnerModule`
 - optionally run `openclaw plugins install -l <pluginRoot>`
 - restart the Gateway via `openclaw gateway restart`
+t the Gateway via `openclaw gateway restart`

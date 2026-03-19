@@ -11,6 +11,7 @@
     "smoke:dynamic": "node scripts/smoke-dynamic-orchestration.mjs",
     "smoke:blocked": "node scripts/smoke-blocked-resume-orchestration.mjs",
     "smoke:expand-modes": "node scripts/smoke-expand-modes.mjs",
-    "smoke:retry-skip": "node scripts/smoke-retry-skip-orchestration.mjs"
+    "smoke:retry-skip": "node scripts/smoke-retry-skip-orchestration.mjs",
+    "smoke:retry-twice": "node scripts/smoke-retry-twice-orchestration.mjs"
   }
 }

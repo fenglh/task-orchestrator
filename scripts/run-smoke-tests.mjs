@@ -6,6 +6,7 @@ const scripts = [
   'smoke-blocked-resume-orchestration.mjs',
   'smoke-expand-modes.mjs',
   'smoke-retry-skip-orchestration.mjs',
+  'smoke-retry-twice-orchestration.mjs',
 ];
 
 function runScript(script) {
