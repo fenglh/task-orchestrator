@@ -34,6 +34,12 @@ export function renderNodeDetail(view: TaskNodeDetailView): string {
   if (view.node.completionEvidence) {
     lines.push("Completion evidence:");
     lines.push(`- Status: ${view.node.completionEvidence.status}`);
+    if (view.node.completionEvidence.status === "needs_review") {
+      lines.push("- Interpretation: 这不是失败，而是建议你快速复核该节点；系统只完成了自动证据检查。");
+    }
+    if (view.node.completionEvidence.status === "partial") {
+      lines.push("- Interpretation: 该节点已有结果，但自动检查只部分通过，建议优先查看失败项。");
+    }
     lines.push(`- Verifier summary: ${view.node.completionEvidence.verifierSummary}`);
     lines.push("- Note: verifier 只校验可观察证据与基本交付形式，不对复杂动态任务结论做最终裁定");
     if (view.node.completionEvidence.checkResults.length > 0) {

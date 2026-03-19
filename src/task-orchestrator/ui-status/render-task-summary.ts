@@ -21,6 +21,26 @@ function describeStatus(status: TaskSummaryView["status"]): string {
   }
 }
 
+function reviewHint(view: TaskSummaryView): string | undefined {
+  if (!view.reviewStats) {
+    return undefined;
+  }
+
+  if (view.reviewStats.needsReview > 0) {
+    return `有 ${view.reviewStats.needsReview} 个节点建议人工复核：这不代表失败，而是说明系统只完成了自动证据检查，建议你快速看一眼节点详情。`;
+  }
+
+  if (view.reviewStats.partial > 0) {
+    return `有 ${view.reviewStats.partial} 个节点只部分通过自动检查，建议优先查看这些节点的 check 明细。`;
+  }
+
+  if (view.reviewStats.failedChecks > 0) {
+    return `有 ${view.reviewStats.failedChecks} 个节点在自动检查层失败，建议优先查看失败节点详情。`;
+  }
+
+  return undefined;
+}
+
 function nextStepHint(view: TaskSummaryView): string | undefined {
   if (view.status === "awaiting_plan_confirmation") {
     return "下一步：查看任务树后，使用 `/task resume` 或直接确认开始。";
@@ -60,6 +80,11 @@ export function renderTaskSummary(view: TaskSummaryView): string {
     lines.push(
       `Review flags: needs_review=${view.reviewStats.needsReview}, partial=${view.reviewStats.partial}, failed_checks=${view.reviewStats.failedChecks}`,
     );
+  }
+
+  const reviewHintText = reviewHint(view);
+  if (reviewHintText) {
+    lines.push(`Review note: ${reviewHintText}`);
   }
 
   if (view.blocked) {

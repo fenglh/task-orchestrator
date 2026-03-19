@@ -3,10 +3,24 @@ import type {
   TaskTreeView,
 } from "../types/task-status-view.ts";
 
+function describeEvidenceStatus(status?: string): string {
+  switch (status) {
+    case "needs_review":
+      return "⚠️ review";
+    case "partial":
+      return "⚠️ partial";
+    case "failed":
+      return "❌ failed-checks";
+    case "passed":
+      return "✅ checks-pass";
+    default:
+      return status ? `evidence=${status}` : "";
+  }
+}
+
 function renderNode(node: TaskTreeNodeView, indent: string): string[] {
-  const evidenceSuffix = node.completionEvidenceStatus
-    ? ` {evidence=${node.completionEvidenceStatus}}`
-    : "";
+  const evidenceText = describeEvidenceStatus(node.completionEvidenceStatus);
+  const evidenceSuffix = evidenceText ? ` {${evidenceText}}` : "";
   const lines = [`${indent}- ${node.displayPath}. ${node.title} [${node.status}]${evidenceSuffix}`];
   for (const child of node.children) {
     lines.push(...renderNode(child, `${indent}  `));
