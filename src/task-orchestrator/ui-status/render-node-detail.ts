@@ -38,6 +38,10 @@ export function renderNodeDetail(view: TaskNodeDetailView): string {
     lines.push("- Note: verifier 只校验可观察证据与基本交付形式，不对复杂动态任务结论做最终裁定");
     if (view.node.completionEvidence.checkResults.length > 0) {
       lines.push(`- Check results: ${view.node.completionEvidence.checkResults.length}`);
+      lines.push("Check result details:");
+      for (const checkResult of view.node.completionEvidence.checkResults) {
+        lines.push(`- [${checkResult.status}] ${checkResult.checkId}: ${checkResult.detail}`);
+      }
     }
     if (view.node.completionEvidence.runtimeEvidence) {
       lines.push("Runtime evidence:");
