@@ -72,11 +72,16 @@ function renderNode(node: TaskTreeNodeView, indent: string): string[] {
   return lines;
 }
 
-function displayTaskTitle(view: Pick<TaskTreeView, "title" | "rootGoal">): string {
+function taskText(view: Pick<TaskTreeView, "title" | "rootGoal">): string {
   const title = String(view.title || "").trim();
   const rootGoal = String(view.rootGoal || "").trim();
   if (title.endsWith("...") && rootGoal) return rootGoal;
   return title || rootGoal || "未命名任务";
+}
+
+function displayTaskTitle(view: Pick<TaskTreeView, "title" | "rootGoal">): string {
+  const full = taskText(view);
+  return full.length > 36 ? `${full.slice(0, 36).trim()}…` : full;
 }
 
 export function renderTaskTree(view: TaskTreeView): string {
@@ -87,6 +92,11 @@ export function renderTaskTree(view: TaskTreeView): string {
     `- **名称**：${displayTaskTitle(view)}`,
     `- **状态**：${threadStatusLabel(view.status)}`,
   ];
+
+  const fullTaskText = taskText(view);
+  if (fullTaskText !== displayTaskTitle(view)) {
+    lines.push("- **完整任务**：", "```text", fullTaskText, "```");
+  }
 
   if (view.suggestedNodeRef && view.suggestedNodeTitle) {
     lines.push("", "## 建议先看", `- **${view.suggestedNodeRef} ${view.suggestedNodeTitle}**`);

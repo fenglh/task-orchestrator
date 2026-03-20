@@ -32,11 +32,16 @@ function statusLabel(view: TaskSummaryView): string {
   }
 }
 
-function displayTaskTitle(view: Pick<TaskSummaryView, "title" | "rootGoal">): string {
+function taskText(view: Pick<TaskSummaryView, "title" | "rootGoal">): string {
   const title = String(view.title || "").trim();
   const rootGoal = String(view.rootGoal || "").trim();
   if (title.endsWith("...") && rootGoal) return rootGoal;
   return title || rootGoal || "未命名任务";
+}
+
+function displayTaskTitle(view: Pick<TaskSummaryView, "title" | "rootGoal">): string {
+  const full = taskText(view);
+  return full.length > 36 ? `${full.slice(0, 36).trim()}…` : full;
 }
 
 function formatSummaryBullets(text: string): string[] {
@@ -134,6 +139,11 @@ export function renderTaskSummary(view: TaskSummaryView): string {
     `- **状态**：${statusLabel(view)}`,
     `- **进度**：${view.progress.done}/${view.progress.total}`,
   ];
+
+  const fullTaskText = taskText(view);
+  if (fullTaskText !== displayTaskTitle(view)) {
+    lines.push("- **完整任务**：", "```text", fullTaskText, "```");
+  }
 
   const summaryBullets = formatSummaryBullets(view.latestSummary || "");
   if (summaryBullets.length) {
