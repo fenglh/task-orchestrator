@@ -55,7 +55,10 @@ function noRecentTaskText(): string {
 }
 
 function recentThreadHint(thread: TaskThread): string {
-  return `当前没有进行中的任务，下面展示最近一条任务：${thread.title}`;
+  return [
+    "当前没有进行中的任务。",
+    `下面展示最近一条任务：${thread.title}`,
+  ].join("\n");
 }
 
 export async function routeMessage(

@@ -73,9 +73,9 @@ console.log('');
 
 const assertions = [
   ['channel active thread cleared after finish', !state?.activeThreadId],
-  ['status falls back to recent thread', statusResult.text.includes('当前没有进行中的任务，下面展示最近一条任务：运行 recent fallback smoke test')],
+  ['status falls back to recent thread', statusResult.text.includes('当前没有进行中的任务。\n下面展示最近一条任务：运行 recent fallback smoke test')],
   ['status shows finished summary', statusResult.text.includes('状态：已结束（含待复核结果）') || statusResult.text.includes('状态：已完成')],
-  ['tree falls back to recent thread', treeResult.text.includes('当前没有进行中的任务，下面展示最近一条任务：运行 recent fallback smoke test')],
+  ['tree falls back to recent thread', treeResult.text.includes('当前没有进行中的任务。\n下面展示最近一条任务：运行 recent fallback smoke test')],
   ['tree shows task title', treeResult.text.includes('任务：运行 recent fallback smoke test')],
 ];
 

@@ -46,9 +46,15 @@ function reviewHint(view: TaskSummaryView): string | undefined {
   return undefined;
 }
 
-function finishedOutcomeHint(view: TaskSummaryView): string | undefined {
-  if (view.status !== "finished" || !view.outcomeStats) return undefined;
-  return `结束摘要：完成 ${view.outcomeStats.done} 个节点，跳过 ${view.outcomeStats.cancelled} 个节点，仍失败 ${view.outcomeStats.failed} 个节点，当前阻塞 ${view.outcomeStats.blocked} 个节点。`;
+function finishedOutcomeHint(view: TaskSummaryView): string[] {
+  if (view.status !== "finished" || !view.outcomeStats) return [];
+  return [
+    "结果汇总：",
+    `- 完成 ${view.outcomeStats.done} 个节点`,
+    `- 跳过 ${view.outcomeStats.cancelled} 个节点`,
+    `- 失败 ${view.outcomeStats.failed} 个节点`,
+    `- 当前阻塞 ${view.outcomeStats.blocked} 个节点`,
+  ];
 }
 
 function nextStepHint(view: TaskSummaryView): string | undefined {
@@ -113,57 +119,88 @@ export function renderTaskSummary(view: TaskSummaryView): string {
   ];
 
   if (view.status === "awaiting_plan_confirmation") {
-    lines.push("说明：计划已生成，尚未执行。请确认是否开始执行。");
+    lines.push("", "说明：", "- 计划已生成，尚未执行", "- 请确认是否开始执行");
   }
 
   if (view.status === "awaiting_finish_confirmation") {
-    lines.push("说明：执行链已经跑完，但结果里包含需要人工复核的节点，因此系统不会自动判定任务已完成。");
+    lines.push(
+      "",
+      "说明：",
+      "- 执行链已经跑完",
+      "- 结果里包含需要人工复核的节点",
+      "- 系统暂不会自动判定任务已完成",
+    );
   }
 
   if (view.status === "finished" && hasReviewRisk(view)) {
-    lines.push("说明：执行已经结束，但这更像一份待你复核的分析结果，而不是系统替你下的最终定论。");
+    lines.push(
+      "",
+      "说明：",
+      "- 执行已经结束",
+      "- 但这更像一份待你复核的分析结果",
+      "- 不是系统替你下的最终定论",
+    );
   }
 
   if (view.currentNode) {
-    lines.push(`当前节点：${view.currentNode.displayPath} ${view.currentNode.title}`);
-    lines.push(`当前主线焦点：当前主线正在推进节点 ${view.currentNode.displayPath}`);
+    lines.push(
+      "",
+      "当前焦点：",
+      `- 当前节点：${view.currentNode.displayPath} ${view.currentNode.title}`,
+      `- 主线正在推进节点 ${view.currentNode.displayPath}`,
+    );
   }
 
   if (view.reviewStats) {
     lines.push(
-      `复核标记：建议复核=${view.reviewStats.needsReview}，部分通过=${view.reviewStats.partial}，检查失败=${view.reviewStats.failedChecks}`,
+      "",
+      "复核情况：",
+      `- 建议复核：${view.reviewStats.needsReview}`,
+      `- 部分通过：${view.reviewStats.partial}`,
+      `- 检查失败：${view.reviewStats.failedChecks}`,
     );
   }
 
   const reviewHintText = reviewHint(view);
-  if (reviewHintText) lines.push(`复核提示：${reviewHintText}`);
+  if (reviewHintText) {
+    lines.push("", "需要留意：", `- ${reviewHintText}`);
+  }
 
   if (hasReviewRisk(view)) {
-    lines.push("判断边界：下面的判断来自已读取的文档、脚本和自动证据，属于阶段性分析，不等于最终定论。");
+    lines.push("", "判断边界：", "- 下面的判断来自已读取的文档、脚本和自动证据", "- 属于阶段性分析，不等于最终定论");
   }
 
   if (view.blocked) {
-    lines.push(`卡住问题：${view.blocked.question}`);
-    lines.push(`卡住原因：${view.blocked.whyBlocked}`);
+    lines.push(
+      "",
+      "当前阻塞：",
+      `- 问题：${view.blocked.question}`,
+      `- 原因：${view.blocked.whyBlocked}`,
+    );
   }
 
   const compactSummary = compactLatestSummary(view);
   if (compactSummary) {
-    lines.push(`${hasReviewRisk(view) ? "当前判断（待复核）" : "最新进展"}：${compactSummary}`);
+    lines.push("", hasReviewRisk(view) ? "当前判断：" : "最新进展：", `- ${compactSummary}`);
   }
 
   if (view.suggestedNode) {
-    lines.push(`建议先看：${view.suggestedNode.displayPath} ${view.suggestedNode.title}`);
-    lines.push(`原因：${view.suggestedNode.reason}`);
-    lines.push("推荐命令：");
-    lines.push(`- /task node ${view.suggestedNode.displayPath}`);
+    lines.push(
+      "",
+      "建议先看：",
+      `- 节点：${view.suggestedNode.displayPath} ${view.suggestedNode.title}`,
+      `- 原因：${view.suggestedNode.reason}`,
+      `- 命令：/task node ${view.suggestedNode.displayPath}`,
+    );
   }
 
-  const outcomeHint = finishedOutcomeHint(view);
-  if (outcomeHint) lines.push(outcomeHint);
+  lines.push(...finishedOutcomeHint(view));
 
   const hint = nextStepHint(view);
-  if (hint) lines.push(hint);
+  if (hint) {
+    const normalized = hint.replace(/^下一步：/u, "").trim();
+    lines.push("", "下一步：", `- ${normalized}`);
+  }
 
   return lines.join("\n");
 }
