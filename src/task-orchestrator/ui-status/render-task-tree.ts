@@ -61,19 +61,17 @@ function evidenceStatusLabel(status?: string): string {
   }
 }
 
-function flattenNodes(nodes: TaskTreeNodeView[], bucket: TaskTreeNodeView[] = []): TaskTreeNodeView[] {
-  for (const node of nodes) {
-    bucket.push(node);
-    if (node.children.length > 0) flattenNodes(node.children, bucket);
-  }
-  return bucket;
-}
-
-function renderNodeLine(node: TaskTreeNodeView): string {
+function renderNode(node: TaskTreeNodeView, indent = ""): string[] {
   const parts = [`节点 ${node.displayPath}`, node.title, nodeStatusLabel(node.status)];
   const evidence = evidenceStatusLabel(node.completionEvidenceStatus);
   if (evidence && evidence !== "检查通过") parts.push(evidence);
-  return `- ${parts.join(" · ")}`;
+  if (node.isSuggestedNode) parts.push("建议先看");
+
+  const lines = [`${indent}- ${parts.join(" · ")}`];
+  for (const child of node.children) {
+    lines.push(...renderNode(child, `${indent}  `));
+  }
+  return lines;
 }
 
 function taskText(view: Pick<TaskTreeView, "title" | "rootGoal">): string {
@@ -102,24 +100,9 @@ export function renderTaskTree(view: TaskTreeView): string {
     lines.push("- **完整任务**：", "```text", fullTaskText, "```");
   }
 
-  const flatNodes = flattenNodes(view.tree);
-  const suggestedKey = view.suggestedNodeRef && view.suggestedNodeTitle
-    ? `${view.suggestedNodeRef} ${view.suggestedNodeTitle}`
-    : null;
-  const suggestedNode = suggestedKey
-    ? flatNodes.find((node) => `${node.displayPath} ${node.title}` === suggestedKey)
-    : undefined;
-  const otherNodes = flatNodes.filter((node) => node !== suggestedNode);
-
-  if (suggestedNode) {
-    lines.push("", "## 建议先看", renderNodeLine(suggestedNode));
-  }
-
-  if (otherNodes.length) {
-    lines.push("", "## 其他节点");
-    for (const node of otherNodes) {
-      lines.push(renderNodeLine(node));
-    }
+  lines.push("", "## 任务结构");
+  for (const node of view.tree) {
+    lines.push(...renderNode(node));
   }
 
   return lines.join("\n");
