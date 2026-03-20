@@ -119,7 +119,8 @@ async function resolveTargetThread(
   explicitThreadId?: string,
 ): Promise<{ thread?: TaskThread; prefixed: boolean }> {
   if (explicitThreadId) {
-    return { thread: await orchestrator.getThread(explicitThreadId), prefixed: false };
+    const resolvedId = await orchestrator.resolveThreadId(channelConversationId, explicitThreadId);
+    return { thread: resolvedId ? await orchestrator.getThread(resolvedId) : undefined, prefixed: false };
   }
   if (activeThreadId) {
     return { thread: await orchestrator.getThread(activeThreadId), prefixed: false };
@@ -178,9 +179,13 @@ export async function routeMessage(
       }
       case "open":
       case "use": {
-        await orchestrator.setActiveTask(input.channelContext, command.threadId);
-        const view = await orchestrator.getTaskStatus(command.threadId, "summary");
-        return { mode: "task", text: renderTaskSummary(view), threadId: command.threadId };
+        const resolvedId = await orchestrator.resolveThreadId(input.channelContext.channelConversationId, command.threadId);
+        if (!resolvedId) {
+          return { mode: "chat", text: `任务不存在：${command.threadId}` };
+        }
+        await orchestrator.setActiveTask(input.channelContext, resolvedId);
+        const view = await orchestrator.getTaskStatus(resolvedId, "summary");
+        return { mode: "task", text: renderTaskSummary(view), threadId: resolvedId };
       }
       case "edit": {
         await orchestrator.updatePendingTask(input.channelContext, command.payload);
@@ -218,49 +223,63 @@ export async function routeMessage(
         };
       }
       case "retry": {
-        const targetThreadId = command.threadId || activeThreadId;
+        const targetThreadId = command.threadId
+          ? await orchestrator.resolveThreadId(input.channelContext.channelConversationId, command.threadId)
+          : activeThreadId;
         if (!targetThreadId) return { mode: "chat", text: "当前没有进行中的任务。" };
         const thread = await orchestrator.retryTaskNode(targetThreadId, command.instruction, command.nodeRef);
         const view = await orchestrator.getTaskStatus(thread.threadId, "summary");
         return { mode: "task", text: renderTaskSummary(view), threadId: targetThreadId };
       }
       case "skip": {
-        const targetThreadId = command.threadId || activeThreadId;
+        const targetThreadId = command.threadId
+          ? await orchestrator.resolveThreadId(input.channelContext.channelConversationId, command.threadId)
+          : activeThreadId;
         if (!targetThreadId) return { mode: "chat", text: "当前没有进行中的任务。" };
         const thread = await orchestrator.skipTaskNode(targetThreadId, command.nodeRef);
         const view = await orchestrator.getTaskStatus(thread.threadId, "summary");
         return { mode: "task", text: renderTaskSummary(view), threadId: targetThreadId };
       }
       case "pause": {
-        const targetThreadId = command.threadId || activeThreadId;
+        const targetThreadId = command.threadId
+          ? await orchestrator.resolveThreadId(input.channelContext.channelConversationId, command.threadId)
+          : activeThreadId;
         if (!targetThreadId) return { mode: "chat", text: "当前没有进行中的任务。" };
         const thread = await orchestrator.pauseTask(targetThreadId);
         return { mode: "task", text: renderTaskSummary(await orchestrator.getTaskStatus(thread.threadId, "summary")), threadId: targetThreadId };
       }
       case "resume": {
-        const targetThreadId = command.threadId || activeThreadId;
+        const targetThreadId = command.threadId
+          ? await orchestrator.resolveThreadId(input.channelContext.channelConversationId, command.threadId)
+          : activeThreadId;
         if (!targetThreadId) return { mode: "chat", text: "当前没有进行中的任务。" };
         const thread = await orchestrator.resumeTask(targetThreadId, command.payload);
         return { mode: "task", text: await renderThreadResponse(orchestrator, thread), threadId: targetThreadId };
       }
       case "finish": {
-        const targetThreadId = command.threadId || activeThreadId;
+        const targetThreadId = command.threadId
+          ? await orchestrator.resolveThreadId(input.channelContext.channelConversationId, command.threadId)
+          : activeThreadId;
         if (!targetThreadId) return { mode: "chat", text: "当前没有进行中的任务。" };
         const thread = await orchestrator.confirmTaskFinish(targetThreadId);
         return { mode: "task", text: await renderThreadResponse(orchestrator, thread), threadId: targetThreadId };
       }
       case "cancel": {
-        const targetThreadId = command.threadId || activeThreadId;
+        const targetThreadId = command.threadId
+          ? await orchestrator.resolveThreadId(input.channelContext.channelConversationId, command.threadId)
+          : activeThreadId;
         if (!targetThreadId) return { mode: "chat", text: "当前没有进行中的任务。" };
         const thread = await orchestrator.cancelTask(targetThreadId);
         const view = await orchestrator.getTaskStatus(thread.threadId, "summary");
         return { mode: "task", text: renderTaskSummary(view), threadId: targetThreadId };
       }
       case "delete": {
-        const targetThreadId = command.threadId || activeThreadId;
+        const targetThreadId = command.threadId
+          ? await orchestrator.resolveThreadId(input.channelContext.channelConversationId, command.threadId)
+          : activeThreadId;
         if (!targetThreadId) return { mode: "chat", text: "当前没有可删除的任务。请先使用 `/task list` 查看任务 id。" };
         const targetThread = await orchestrator.getThread(targetThreadId);
-        if (!targetThread) return { mode: "chat", text: `任务不存在：${targetThreadId}` };
+        if (!targetThread) return { mode: "chat", text: `任务不存在：${command.threadId || targetThreadId}` };
         await orchestrator.deleteTask(input.channelContext.channelConversationId, targetThreadId);
         return { mode: "chat", text: `已删除任务 ${shortThreadId(targetThread.threadId)} · ${targetThread.title}` };
       }

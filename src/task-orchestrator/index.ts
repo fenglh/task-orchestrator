@@ -246,6 +246,22 @@ export class TaskOrchestrator {
     return this.taskThreadRepo.list();
   }
 
+  async resolveThreadId(
+    channelConversationId: string,
+    idOrPrefix: string,
+  ): Promise<string | undefined> {
+    const exact = await this.taskThreadRepo.get(idOrPrefix);
+    if (exact) return exact.threadId;
+
+    const threads = await this.listTasks(channelConversationId);
+    const matches = threads.filter((thread) => thread.threadId.startsWith(idOrPrefix));
+    if (matches.length === 1) return matches[0].threadId;
+    if (matches.length > 1) {
+      throw new Error(`Task id is ambiguous: ${idOrPrefix}`);
+    }
+    return undefined;
+  }
+
   async stagePendingTask(
     channelContext: ChannelContext,
     taskInput: string,

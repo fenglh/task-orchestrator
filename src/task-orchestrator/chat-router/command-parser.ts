@@ -38,6 +38,10 @@ export function parseTaskCommand(message: string): TaskCommand | undefined {
   const arg2 = parts[2];
   const arg3 = parts[3];
 
+  if (command && !["start","help","list","current","open","use","status","tree","node","edit","discard","refine","retry","skip","pause","resume","finish","cancel","delete"].includes(command) && isLikelyThreadId(command)) {
+    return { name: "open", threadId: command };
+  }
+
   switch (command) {
     case "start":
       return { name: "start", payload: parts.slice(2).join(" ") };
