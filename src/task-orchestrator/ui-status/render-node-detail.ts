@@ -118,18 +118,21 @@ function suggestedActions(view: TaskNodeDetailView): { notes: string[]; commands
 
 export function renderNodeDetail(view: TaskNodeDetailView): string {
   const lines = [
-    `节点：${view.node.displayPath} ${view.node.title}`,
-    `状态：${statusLabel(view.node.status)}`,
-    `目标：${view.node.goal}`,
-    `完成标准：${view.node.successCriteria}`,
+    "# 节点详情",
+    "",
+    "## 节点信息",
+    `- **节点**：${view.node.displayPath} ${view.node.title}`,
+    `- **状态**：${statusLabel(view.node.status)}`,
+    `- **目标**：${view.node.goal}`,
+    `- **完成标准**：${view.node.successCriteria}`,
   ];
 
   if (view.node.userVisibleSummary) {
-    lines.push(`摘要：${view.node.userVisibleSummary}`);
+    lines.push("", "## 当前结论", `- ${view.node.userVisibleSummary}`);
   }
 
   if (view.node.completionContract) {
-    lines.push("完成契约：");
+    lines.push("", "## 完成契约");
     if (view.node.completionContract.objective) {
       lines.push(`- 目标：${view.node.completionContract.objective}`);
     }
@@ -148,60 +151,59 @@ export function renderNodeDetail(view: TaskNodeDetailView): string {
   }
 
   if (view.node.completionEvidence) {
-    lines.push("完成证据：");
-    lines.push(`- 状态：${evidenceStatusLabel(view.node.completionEvidence.status)}`);
+    lines.push("", "## 完成证据");
+    lines.push(`- **状态**：${evidenceStatusLabel(view.node.completionEvidence.status)}`);
     if (view.node.completionEvidence.status === "needs_review") {
-      lines.push("- 解释：这不是失败，而是建议你快速复核该节点；系统只完成了自动证据检查。");
+      lines.push("- **说明**：这不是失败，而是建议你快速复核该节点；系统只完成了自动证据检查。");
     }
     if (view.node.completionEvidence.status === "partial") {
-      lines.push("- 解释：该节点已有结果，但自动检查只部分通过，建议优先查看失败项。");
+      lines.push("- **说明**：该节点已有结果，但自动检查只部分通过，建议优先查看失败项。");
     }
-    lines.push(`- 校验摘要：${view.node.completionEvidence.verifierSummary}`);
-    lines.push("- 说明：verifier 只校验可观察证据与基本交付形式，不对复杂动态任务结论做最终裁定");
+    lines.push(`- **校验摘要**：${view.node.completionEvidence.verifierSummary}`);
 
     if (view.node.completionEvidence.checkResults.length > 0) {
-      lines.push(`- 检查数量：${view.node.completionEvidence.checkResults.length}`);
-      lines.push("检查明细：");
+      lines.push("", "## 检查明细");
       for (const checkResult of view.node.completionEvidence.checkResults) {
         lines.push(`- [${checkStatusLabel(checkResult.status)}] ${checkResult.checkId}: ${checkResult.detail}`);
       }
     }
 
     if (view.node.completionEvidence.runtimeEvidence) {
-      lines.push("运行时证据：");
+      lines.push("", "## 运行时证据");
       if ((view.node.completionEvidence.runtimeEvidence.toolCalls?.length ?? 0) > 0) {
-        lines.push(`- 观察到的工具调用：${view.node.completionEvidence.runtimeEvidence.toolCalls.join(", ")}`);
+        lines.push(`- **工具调用**：${view.node.completionEvidence.runtimeEvidence.toolCalls.join(", ")}`);
       }
       if ((view.node.completionEvidence.runtimeEvidence.modifiedArtifacts?.length ?? 0) > 0) {
-        lines.push(`- 观察到的产物修改：${view.node.completionEvidence.runtimeEvidence.modifiedArtifacts.join(", ")}`);
+        lines.push(`- **产物修改**：${view.node.completionEvidence.runtimeEvidence.modifiedArtifacts.join(", ")}`);
       }
       if ((view.node.completionEvidence.runtimeEvidence.commandLabels?.length ?? 0) > 0) {
-        lines.push(`- 观察到的命令：${view.node.completionEvidence.runtimeEvidence.commandLabels.join(" | ")}`);
+        lines.push(`- **命令**：${view.node.completionEvidence.runtimeEvidence.commandLabels.join(" | ")}`);
       }
     }
   }
 
   if (view.node.report) {
-    lines.push(`报告：${view.node.report}`);
+    lines.push("", "## 补充报告", `- ${view.node.report}`);
   }
 
   const actions = suggestedActions(view);
   if (actions.notes.length > 0) {
-    lines.push("建议动作：");
+    lines.push("", "## 建议动作");
     for (const action of actions.notes) {
       lines.push(`- ${action}`);
     }
   }
 
   if (actions.commands.length > 0) {
-    lines.push("推荐命令：");
+    lines.push("", "## 推荐命令", "```bash");
     for (const command of actions.commands) {
-      lines.push(`- ${command}`);
+      lines.push(command);
     }
+    lines.push("```");
   }
 
   if (view.node.children.length > 0) {
-    lines.push("子节点：");
+    lines.push("", "## 子节点");
     for (const child of view.node.children) {
       lines.push(`- ${child.displayPath}. ${child.title} [${statusLabel(child.status)}]`);
     }

@@ -45,21 +45,24 @@ function allNodesPending(nodes: TaskTreeNodeView[]): boolean {
 
 export function renderPlanPreview(view: TaskTreeView): string {
   const lines = [
-    "计划已生成，尚未开始执行。",
-    `任务：${view.title}`,
+    "# 执行计划",
     "",
-    "计划步骤：",
+    "## 任务信息",
+    `- **任务**：${view.rootGoal || view.title}`,
+    "- **状态**：计划已生成，尚未开始执行",
+    "",
+    "## 计划步骤",
     ...renderPlanNodes(view.tree),
   ];
 
   if (allNodesPending(view.tree)) {
-    lines.push("", "当前这些步骤都还未开始。");
+    lines.push("", "## 当前状态", "- 当前这些步骤都还未开始");
   }
 
   lines.push(
     "",
-    "你现在可以：",
-    "- 回复 `开始执行` 或输入 `/task resume` 开始执行",
+    "## 下一步",
+    "- 回复“开始执行”或输入 `/task resume` 开始执行",
     "- 输入 `/task tree` 查看任务树",
     "- 输入 `/task refine <节点>` 继续细化某一步",
     "- 输入 `/task cancel` 取消任务",

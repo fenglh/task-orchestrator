@@ -6,28 +6,25 @@ export function renderBlockedMessage(thread: TaskThread): string {
   }
 
   const lines = [
-    "当前任务已卡住，正在等待你的输入。",
-    `问题：${thread.blocked.question}`,
-    `原因：${thread.blocked.whyBlocked}`,
+    "# 任务等待输入",
+    "",
+    "## 当前问题",
+    `- **问题**：${thread.blocked.question}`,
+    `- **原因**：${thread.blocked.whyBlocked}`,
   ];
 
   if (thread.blocked.requiredInputSchema) {
-    lines.push("需要的输入：请尽量直接回复缺失信息，不必重复整个任务背景。");
+    lines.push("", "## 你现在最该做什么", "- 直接回复缺失信息即可，不必重复整个任务背景");
   }
 
   if (thread.blocked.suggestedActions?.length) {
-    lines.push("建议你现在这样做：");
+    lines.push("", "## 建议操作");
     for (const action of thread.blocked.suggestedActions) {
       lines.push(`- ${action}`);
     }
   }
 
-  lines.push("你也可以：");
-  lines.push("- 直接回复缺失输入，系统会继续执行");
-  lines.push("推荐命令：");
-  lines.push("- /task tree");
-  lines.push("- /task pause");
-  lines.push("- /task cancel");
+  lines.push("", "## 推荐命令", "```bash", "/task tree", "/task pause", "/task cancel", "```");
 
   return lines.join("\n");
 }
