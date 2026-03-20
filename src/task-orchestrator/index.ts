@@ -452,6 +452,32 @@ export class TaskOrchestrator {
     });
   }
 
+  async deleteTask(
+    channelConversationId: string,
+    threadId: string,
+  ): Promise<void> {
+    const thread = await this.requireThread(threadId);
+    await this.taskThreadRepo.delete(threadId);
+    const channelState = await this.getChannelState(channelConversationId);
+    if (channelState?.activeThreadId === threadId || channelState?.awaitingInputThreadId === threadId) {
+      await this.updateChannelState(channelConversationId, {
+        mode: "chat",
+        activeThreadId: undefined,
+        awaitingInputThreadId: undefined,
+      });
+    }
+    if (thread.channelConversationId !== channelConversationId) {
+      const ownerState = await this.getChannelState(thread.channelConversationId);
+      if (ownerState?.activeThreadId === threadId || ownerState?.awaitingInputThreadId === threadId) {
+        await this.updateChannelState(thread.channelConversationId, {
+          mode: "chat",
+          activeThreadId: undefined,
+          awaitingInputThreadId: undefined,
+        });
+      }
+    }
+  }
+
   private async run(thread: TaskThread): Promise<TaskThread> {
     const updatedThread = await runLoop(
       {

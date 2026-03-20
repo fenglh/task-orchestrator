@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import type { TaskThread } from "../types/task-thread.ts";
 import type { TaskThreadRepository } from "./task-thread-repo.ts";
@@ -28,6 +28,11 @@ export class FileTaskThreadRepository implements TaskThreadRepository {
   async save(thread: TaskThread): Promise<void> {
     await this.ensureDirs();
     await writeFile(this.filePath(thread.threadId), JSON.stringify(thread, null, 2));
+  }
+
+  async delete(threadId: string): Promise<void> {
+    await this.ensureDirs();
+    await rm(this.filePath(threadId), { force: true });
   }
 
   async list(): Promise<TaskThread[]> {
