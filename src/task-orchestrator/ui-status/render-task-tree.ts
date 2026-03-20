@@ -72,12 +72,19 @@ function renderNode(node: TaskTreeNodeView, indent: string): string[] {
   return lines;
 }
 
+function displayTaskTitle(view: Pick<TaskTreeView, "title" | "rootGoal">): string {
+  const title = String(view.title || "").trim();
+  const rootGoal = String(view.rootGoal || "").trim();
+  if (title.endsWith("...") && rootGoal) return rootGoal;
+  return title || rootGoal || "未命名任务";
+}
+
 export function renderTaskTree(view: TaskTreeView): string {
   const lines = [
     "# 任务树",
     "",
     "## 任务信息",
-    `- **任务**：${view.title}`,
+    `- **任务**：${displayTaskTitle(view)}`,
     `- **状态**：${threadStatusLabel(view.status)}`,
   ];
 

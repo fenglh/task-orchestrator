@@ -16,6 +16,7 @@ export interface TaskSummaryView {
   kind: "summary";
   threadId: string;
   title: string;
+  rootGoal?: string;
   status: TaskThreadStatus;
   reviewStats?: {
     needsReview: number;
@@ -64,6 +65,7 @@ export interface TaskTreeView {
   kind: "tree";
   threadId: string;
   title: string;
+  rootGoal?: string;
   status: TaskThreadStatus;
   currentNodeRef?: string;
   currentNodeTitle?: string;

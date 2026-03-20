@@ -129,12 +129,19 @@ function compactLatestSummary(view: TaskSummaryView): string[] {
   return formatLatestSummary(softened);
 }
 
+function displayTaskTitle(view: Pick<TaskSummaryView, "title" | "rootGoal">): string {
+  const title = String(view.title || "").trim();
+  const rootGoal = String(view.rootGoal || "").trim();
+  if (title.endsWith("...") && rootGoal) return rootGoal;
+  return title || rootGoal || "未命名任务";
+}
+
 export function renderTaskSummary(view: TaskSummaryView): string {
   const lines = [
     `# 任务状态`,
     "",
     `## 任务信息`,
-    `- **任务**：${view.title}`,
+    `- **任务**：${displayTaskTitle(view)}`,
     `- **状态**：${statusLabel(view)}`,
     `- **进度**：${view.progress.done}/${view.progress.total}`,
   ];

@@ -104,11 +104,13 @@ function pickSuggestedNode(thread: TaskThread): {
 
 export function projectSummaryView(thread: TaskThread): TaskSummaryView {
   const currentNode = thread.activeNodeId ? thread.nodes[thread.activeNodeId] : undefined;
+  const rootNode = thread.nodes[thread.rootTaskId];
 
   return {
     kind: "summary",
     threadId: thread.threadId,
     title: thread.title,
+    rootGoal: rootNode?.goal,
     status: thread.status,
     currentNode: currentNode
       ? {
@@ -145,6 +147,7 @@ export function projectTreeView(thread: TaskThread): TaskTreeView {
     kind: "tree",
     threadId: thread.threadId,
     title: thread.title,
+    rootGoal: rootNode?.goal,
     status: thread.status,
     currentNodeRef: currentNode?.displayPath,
     currentNodeTitle: currentNode?.title,
