@@ -28,21 +28,21 @@ function threadStatusLabel(status?: string): string {
 function nodeStatusLabel(status?: string): string {
   switch (status) {
     case "pending":
-      return "待处理";
+      return "⏳";
     case "running":
-      return "进行中";
+      return "▶️";
     case "done":
-      return "已完成";
+      return "✅";
     case "failed":
-      return "失败";
+      return "❌";
     case "blocked":
-      return "阻塞";
+      return "⛔";
     case "waiting_children":
-      return "等待子任务";
+      return "⏳";
     case "cancelled":
-      return "已跳过";
+      return "⏭️";
     default:
-      return status ?? "未知";
+      return "•";
   }
 }
 
@@ -62,12 +62,14 @@ function evidenceStatusLabel(status?: string): string {
 }
 
 function renderNode(node: TaskTreeNodeView, indent = ""): string[] {
-  const parts = [`节点 ${node.displayPath}`, node.title, nodeStatusLabel(node.status)];
+  const status = nodeStatusLabel(node.status);
+  const extras: string[] = [];
   const evidence = evidenceStatusLabel(node.completionEvidenceStatus);
-  if (evidence && evidence !== "检查通过") parts.push(evidence);
-  if (node.isSuggestedNode) parts.push("建议先看");
+  if (evidence && evidence !== "检查通过") extras.push(evidence);
+  if (node.isSuggestedNode) extras.push("建议先看");
 
-  const lines = [`${indent}- ${parts.join(" · ")}`];
+  const suffix = extras.length ? ` · ${extras.join(" · ")}` : "";
+  const lines = [`${indent}- ${status}节点${node.displayPath}：${node.title}${suffix}`];
   for (const child of node.children) {
     lines.push(...renderNode(child, `${indent}  `));
   }
