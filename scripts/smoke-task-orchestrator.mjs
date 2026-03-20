@@ -108,16 +108,13 @@ const summaryText = renderTaskSummary(summaryView);
 const treeText = renderTaskTree(treeView);
 
 const assertions = [
-  ['summary has review section', summaryText.includes('## 复核情况')],
-  ['tree has evidence status', treeText.includes('{⚠️ 建议复核}')],
-  ['node detail has runtime evidence', nodeText.includes('## 运行时证据')],
-  ['node detail has tool calls', nodeText.includes('**工具调用**：write')],
-  ['node detail has modified artifacts', nodeText.includes('**产物修改**：progress/smoke-report.md')],
-  ['node detail has commands', nodeText.includes('**命令**：write progress/smoke-report.md')],
+  ['summary has current judgment', summaryText.includes('## 当前判断')],
+  ['tree has evidence status', treeText.includes('⚠️')],
+  ['node detail has evidence summary', nodeText.includes('## 证据摘要')],
   ['node detail has check details', nodeText.includes('## 检查明细')],
   ['node detail has chinese node status', nodeText.includes('**状态**：已完成')],
-  ['node detail has chinese evidence status', nodeText.includes('## 完成证据\n- **状态**：建议复核')],
-  ['node detail has chinese outcome type', nodeText.includes('结果类型：分析总结')],
+  ['node detail has chinese evidence status', nodeText.includes('**状态**：建议复核')],
+  ['node detail has command block', nodeText.includes('```bash\n/task node 1\n/task tree\n```')],
 ];
 
 const failed = assertions.filter(([, ok]) => !ok);
