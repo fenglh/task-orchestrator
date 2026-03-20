@@ -61,9 +61,11 @@ function evidenceStatusLabel(status?: string): string {
   }
 }
 
-function renderNode(node: TaskTreeNodeView, indent = ""): string[] {
+function renderNode(node: TaskTreeNodeView, depth = 0): string[] {
   const status = nodeStatusLabel(node.status);
-  const lines = [`${indent}- ${status}节点${node.displayPath}：${node.title}`];
+  const baseIndent = "  ".repeat(depth);
+  const prefix = depth === 0 ? "- " : "↳ ";
+  const lines = [`${baseIndent}${prefix}${status}节点${node.displayPath}：${node.title}`];
 
   const notes: string[] = [];
   const evidence = evidenceStatusLabel(node.completionEvidenceStatus);
@@ -71,11 +73,11 @@ function renderNode(node: TaskTreeNodeView, indent = ""): string[] {
   if (node.isSuggestedNode) notes.push("建议先看");
 
   if (notes.length) {
-    lines.push(`${indent}  > ${notes.join(" · ")}`);
+    lines.push(`${baseIndent}  > ${notes.join(" · ")}`);
   }
 
   for (const child of node.children) {
-    lines.push(...renderNode(child, `${indent}  `));
+    lines.push(...renderNode(child, depth + 1));
   }
   return lines;
 }
