@@ -48,12 +48,19 @@ function reviewHint(view: TaskSummaryView): string | undefined {
 
 function finishedOutcomeHint(view: TaskSummaryView): string[] {
   if (view.status !== "finished" || !view.outcomeStats) return [];
+
+  const rows = [
+    { label: "完成", value: view.outcomeStats.done },
+    { label: "跳过", value: view.outcomeStats.cancelled },
+    { label: "失败", value: view.outcomeStats.failed },
+    { label: "当前阻塞", value: view.outcomeStats.blocked },
+  ].filter((item) => Number(item.value) > 0);
+
+  if (!rows.length) return [];
+
   return [
     "结果汇总：",
-    `- 完成 ${view.outcomeStats.done} 个节点`,
-    `- 跳过 ${view.outcomeStats.cancelled} 个节点`,
-    `- 失败 ${view.outcomeStats.failed} 个节点`,
-    `- 当前阻塞 ${view.outcomeStats.blocked} 个节点`,
+    ...rows.map((item) => `- ${item.label} ${item.value} 个节点`),
   ];
 }
 
