@@ -108,7 +108,7 @@ const summaryText = renderTaskSummary(summaryView);
 const treeText = renderTaskTree(treeView);
 
 const assertions = [
-  ['summary has review section', summaryText.includes('复核情况：')],
+  ['summary has review section', summaryText.includes('## 复核情况')],
   ['tree has evidence status', treeText.includes('{⚠️ 建议复核}')],
   ['node detail has runtime evidence', nodeText.includes('运行时证据：')],
   ['node detail has tool calls', nodeText.includes('观察到的工具调用：write')],

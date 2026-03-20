@@ -73,29 +73,46 @@ function renderNode(node: TaskTreeNodeView, indent: string): string[] {
 }
 
 export function renderTaskTree(view: TaskTreeView): string {
-  const lines = [`任务：${view.title}`, `状态：${threadStatusLabel(view.status)}`];
+  const lines = [
+    "# 任务树",
+    "",
+    "## 任务信息",
+    `- **任务**：${view.title}`,
+    `- **状态**：${threadStatusLabel(view.status)}`,
+  ];
 
   if (view.status === "awaiting_plan_confirmation") {
-    lines.push("说明：计划已生成，尚未执行，正在等待你确认开始。");
+    lines.push("", "## 说明", "- 计划已生成，尚未执行，正在等待你确认开始。");
   }
 
   if (view.status === "awaiting_finish_confirmation") {
-    lines.push("说明：执行链已跑完，但系统检测到仍需人工复核的结果，正在等待你确认是否结束。");
+    lines.push("", "## 说明", "- 执行链已跑完，但系统检测到仍需人工复核的结果，正在等待你确认是否结束。");
   }
 
   if (view.currentNodeRef && view.currentNodeTitle) {
-    lines.push(`当前节点：${view.currentNodeRef} ${view.currentNodeTitle}`);
+    lines.push("", "## 当前节点", `- **节点**：${view.currentNodeRef} ${view.currentNodeTitle}`);
   }
 
   if (view.currentPath.length > 0) {
-    lines.push(`当前路径：${view.currentPath.join(" > ")}`);
+    lines.push("", "## 当前路径", `- ${"`"}${view.currentPath.join(" > ")}${"`"}`);
   }
 
   if (view.suggestedNodeRef && view.suggestedNodeTitle) {
-    lines.push(`推荐查看节点：${view.suggestedNodeRef} ${view.suggestedNodeTitle}`);
+    lines.push("", "## 推荐查看节点", `- **节点**：${view.suggestedNodeRef} ${view.suggestedNodeTitle}`);
   }
 
-  lines.push("图例：👉 当前节点 · ⭐ 推荐查看节点 · ↳ 当前路径 · ⚠️ 建议复核 · ⚠️ 部分通过 · ❌ 检查失败 · ✅ 检查通过");
+  lines.push(
+    "",
+    "## 图例",
+    "- 👉 当前节点",
+    "- ⭐ 推荐查看节点",
+    "- ↳ 当前路径",
+    "- ⚠️ 建议复核",
+    "- ❌ 检查失败",
+    "- ✅ 检查通过",
+    "",
+    "## 节点列表",
+  );
 
   for (const node of view.tree) {
     lines.push(...renderNode(node, ""));
