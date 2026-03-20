@@ -109,7 +109,7 @@ const treeText = renderTaskTree(treeView);
 
 const assertions = [
   ['summary has current judgment', summaryText.includes('## 当前判断')],
-  ['tree has evidence status', treeText.includes('⚠️')],
+  ['tree has evidence status', treeText.includes('建议复核')],
   ['node detail has evidence summary', nodeText.includes('## 证据摘要')],
   ['node detail has check details', nodeText.includes('## 检查明细')],
   ['node detail has chinese node status', nodeText.includes('**状态**：已完成')],
