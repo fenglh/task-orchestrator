@@ -97,22 +97,36 @@ function softenConclusion(text: string): string {
     .trim();
 }
 
-function shortenToStatusCard(text: string, maxLen = 110): string {
-  const normalized = text.replace(/\s+/g, " ").trim();
-  if (!normalized) return normalized;
+function formatLatestSummary(text: string): string[] {
+  const normalized = text
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
 
-  const firstChunk = normalized.split(/(?<=[。！？；;])\s+/u)[0] ?? normalized;
-  if (firstChunk.length <= maxLen) {
-    return firstChunk;
+  if (normalized.length > 1) {
+    return normalized.map((line) => `- ${line}`);
   }
 
-  return `${firstChunk.slice(0, maxLen - 1).trim()}…`;
+  const single = (normalized[0] ?? "").replace(/\s+/g, " ").trim();
+  if (!single) return [];
+
+  const sentences = single
+    .split(/(?<=[。！？；;])\s*/u)
+    .map((part) => part.trim())
+    .filter(Boolean);
+
+  if (sentences.length > 1) {
+    return sentences.map((part) => `- ${part}`);
+  }
+
+  return [`- ${single}`];
 }
 
-function compactLatestSummary(view: TaskSummaryView): string | undefined {
-  if (!view.latestSummary) return undefined;
+function compactLatestSummary(view: TaskSummaryView): string[] {
+  if (!view.latestSummary) return [];
   const softened = softenConclusion(view.latestSummary);
-  return shortenToStatusCard(softened, hasReviewRisk(view) ? 100 : 120);
+  return formatLatestSummary(softened);
 }
 
 export function renderTaskSummary(view: TaskSummaryView): string {
@@ -187,8 +201,8 @@ export function renderTaskSummary(view: TaskSummaryView): string {
   }
 
   const compactSummary = compactLatestSummary(view);
-  if (compactSummary) {
-    lines.push("", hasReviewRisk(view) ? "## 当前判断" : "## 最新进展", `- ${compactSummary}`);
+  if (compactSummary.length) {
+    lines.push("", hasReviewRisk(view) ? "## 当前判断" : "## 最新进展", ...compactSummary);
   }
 
   if (view.suggestedNode) {

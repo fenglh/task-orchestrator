@@ -53,10 +53,9 @@ function normalizeTaskInput(taskInput: string): {
   successCriteria: string;
 } {
   const compact = taskInput.trim();
-  const title = compact.length > 48 ? `${compact.slice(0, 45)}...` : compact;
 
   return {
-    title,
+    title: compact,
     goal: compact,
     successCriteria: "Complete the requested task and provide a verifiable result.",
   };
