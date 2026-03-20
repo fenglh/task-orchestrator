@@ -63,13 +63,17 @@ function evidenceStatusLabel(status?: string): string {
 
 function renderNode(node: TaskTreeNodeView, indent = ""): string[] {
   const status = nodeStatusLabel(node.status);
-  const extras: string[] = [];
-  const evidence = evidenceStatusLabel(node.completionEvidenceStatus);
-  if (evidence && evidence !== "检查通过") extras.push(evidence);
-  if (node.isSuggestedNode) extras.push("建议先看");
+  const lines = [`${indent}- ${status}节点${node.displayPath}：${node.title}`];
 
-  const suffix = extras.length ? ` · ${extras.join(" · ")}` : "";
-  const lines = [`${indent}- ${status}节点${node.displayPath}：${node.title}${suffix}`];
+  const notes: string[] = [];
+  const evidence = evidenceStatusLabel(node.completionEvidenceStatus);
+  if (evidence && evidence !== "检查通过") notes.push(evidence);
+  if (node.isSuggestedNode) notes.push("建议先看");
+
+  if (notes.length) {
+    lines.push(`${indent}  > ${notes.join(" · ")}`);
+  }
+
   for (const child of node.children) {
     lines.push(...renderNode(child, `${indent}  `));
   }
