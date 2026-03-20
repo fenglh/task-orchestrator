@@ -20,7 +20,7 @@ function statusLabel(view: TaskSummaryView): string {
     case "failed":
       return "等待你决定如何继续";
     case "finished":
-      return hasReviewRisk(view) ? "已结束（含待复核结果）" : "已完成";
+      return hasReviewRisk(view) ? "已完成（待复核）" : "已完成";
     case "paused":
       return "已暂停";
     case "awaiting_plan_confirmation":
@@ -111,8 +111,12 @@ function formatLatestSummary(text: string): string[] {
   const single = (normalized[0] ?? "").replace(/\s+/g, " ").trim();
   if (!single) return [];
 
-  const sentences = single
-    .split(/(?<=[。！？；;])\s*/u)
+  const protectedSingle = single
+    .replace(/([0-9]+）)/gu, "\n$1")
+    .replace(/；(?=[0-9]+）)/gu, "；\n");
+
+  const sentences = protectedSingle
+    .split(/\n|(?<=[。！？])\s*/u)
     .map((part) => part.trim())
     .filter(Boolean);
 
@@ -180,13 +184,19 @@ export function renderTaskSummary(view: TaskSummaryView): string {
   }
 
   if (view.reviewStats) {
-    lines.push(
-      "",
-      "## 复核情况",
-      `- **建议复核**：${view.reviewStats.needsReview}`,
-      `- **部分通过**：${view.reviewStats.partial}`,
-      `- **检查失败**：${view.reviewStats.failedChecks}`,
-    );
+    const reviewRows = [
+      { label: "建议复核", value: view.reviewStats.needsReview },
+      { label: "部分通过", value: view.reviewStats.partial },
+      { label: "检查失败", value: view.reviewStats.failedChecks },
+    ].filter((item) => Number(item.value) > 0);
+
+    if (reviewRows.length) {
+      lines.push(
+        "",
+        "## 复核情况",
+        ...reviewRows.map((item) => `- **${item.label}**：${item.value}`),
+      );
+    }
   }
 
   const reviewHintText = reviewHint(view);
@@ -195,7 +205,7 @@ export function renderTaskSummary(view: TaskSummaryView): string {
   }
 
   if (hasReviewRisk(view)) {
-    lines.push("", "## 判断边界", "- 下面的判断来自已读取的文档、脚本和自动证据", "- 属于阶段性分析，不等于最终定论");
+    lines.push("", "## 判断边界", "- 当前结论基于自动证据与已读取内容整理", "- 如需最终确认，建议先看推荐节点再下结论");
   }
 
   if (view.blocked) {
